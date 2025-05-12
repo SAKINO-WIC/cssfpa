@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+
+{% block title %}学生管理 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 d-flex glass-sidebar p-0">
+            <div class="sidebar-content w-100">
+                <div class="sidebar-header text-center py-4">
+                    <h2 class="navbar-title text-white mb-0">评分系统</h2>
+                </div>
+                <div class="sidebar-user text-center">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-2">
+                        <span>{{ current_user.username[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+                    <small class="text-white-50">教师</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item active">
+                        <a href="{{ url_for('teacher.index') }}" class="sidebar-link active">
+                            <i class="fas fa-user-graduate me-2"></i>学生管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link">
+                            <i class="fas fa-cog me-2"></i>评分配置
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link">
+                            <i class="fas fa-calculator me-2"></i>批量评分
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.reports') }}" class="sidebar-link">
+                            <i class="fas fa-chart-bar me-2"></i>数据统计
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                            <i class="fas fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                            <i class="fas fa-sign-out-alt me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 main-content">
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-primary sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">学生管理</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="{{ url_for('teacher.bulk_import') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-import me-1"></i> 批量导入
+                        </a>
+                        <a href="{{ url_for('teacher.add_student') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> 添加学生
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 顶部卡片统计 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card status-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">总学生数</h6>
+                                    <h5 class="card-title mb-0">{{ total_students }}</h5>
+                                    <small class="text-muted">较上月 <span class="text-success">+5.2%</span></small>
+                                </div>
+                                <div class="status-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card status-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">已提交申请书</h6>
+                                    <h5 class="card-title mb-0">{{ submitted_count }}</h5>
+                                    <small class="text-muted">本周新增 <span class="text-success">12</span></small>
+                                </div>
+                                <div class="status-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card status-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">已通过考试</h6>
+                                    <h5 class="card-title mb-0">{{ passed_exam_count }}</h5>
+                                    <small class="text-muted">通过率 <span class="text-success">{{ (passed_exam_count/total_students*100)|round(1) if total_students > 0 else 0 }}%</span></small>
+                                </div>
+                                <div class="status-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card status-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">班级推优通过率</h6>
+                                    <h5 class="card-title mb-0">{{ class_approval_rate }}%</h5>
+                                    <small class="text-muted">较上月 <span class="text-warning">-2.1%</span></small>
+                                </div>
+                                <div class="status-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 检索和筛选区域 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-9">
+                            <form method="POST" action="{{ url_for('teacher.filter_students') }}" class="filter-form">
+                                {{ filter_form.csrf_token }}
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <select name="department" class="form-select" id="department">
+                                                <option value="">全部</option>
+                                                {% for dept_value, dept_label in filter_form.department.choices %}
+                                                    {% if dept_value %}
+                                                        <option value="{{ dept_value }}" {% if selected_department == dept_value %}selected{% endif %}>{{ dept_label }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <label for="department">学院</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <select name="class_name" class="form-select" id="class_name">
+                                                <option value="">全部</option>
+                                                {% for class_value, class_label in filter_form.class_name.choices %}
+                                                    {% if class_value %}
+                                                        <option value="{{ class_value }}" {% if selected_class == class_value %}selected{% endif %}>{{ class_label }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <label for="class_name">班级</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <select name="score_range" class="form-select" id="score_range">
+                                                <option value="">全部</option>
+                                                <option value="none" {% if selected_score_range == 'none' %}selected{% endif %}>未评分</option>
+                                                <option value="0-60" {% if selected_score_range == '0-60' %}selected{% endif %}>0-60分</option>
+                                                <option value="60-70" {% if selected_score_range == '60-70' %}selected{% endif %}>60-70分</option>
+                                                <option value="70-80" {% if selected_score_range == '70-80' %}selected{% endif %}>70-80分</option>
+                                                <option value="80-90" {% if selected_score_range == '80-90' %}selected{% endif %}>80-90分</option>
+                                                <option value="90-100" {% if selected_score_range == '90-100' %}selected{% endif %}>90-100分</option>
+                                            </select>
+                                            <label for="score_range">综合成绩</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-3 filter-buttons">
+                                    <a href="{{ url_for('teacher.index') }}" class="btn btn-outline-secondary btn-filter">重置</a>
+                                    <button type="submit" class="btn btn-primary btn-filter">应用筛选</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="GET" action="{{ url_for('teacher.search_students') }}" class="search-form h-100 d-flex flex-column justify-content-between">
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="query" value="{{ request.args.get('query', '') }}" 
+                                           class="form-control" id="searchInput" placeholder="搜索学号或姓名">
+                                    <label for="searchInput">搜索学号或姓名</label>
+                                </div>
+                                <div class="text-end">
+                                    <button class="btn btn-primary btn-filter" type="submit">
+                                        <i class="fas fa-search"></i> 搜索
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生表格 -->
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table student-table text-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">学号</th>
+                                    <th class="text-center">姓名</th>
+                                    <th class="text-center">班级</th>
+                                    <th class="text-center">政治面貌</th>
+                                    <th class="text-center">入党申请书</th>
+                                    <th class="text-center">初党考试</th>
+                                    <th class="text-center">班级推优</th>
+                                    <th class="text-center">综合评分</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ student.student_id }}</td>
+                                    <td>{{ student.name }}</td>
+                                    <td>{{ student.class_name }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-{{ 'success' if student.political_status == '共青团员' else 'secondary' }}">
+                                            {{ student.political_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if student.has_application %}
+                                            <span class="badge rounded-pill bg-success">已提交</span>
+                                        {% else %}
+                                            <span class="badge rounded-pill bg-danger">未提交</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if student.passed_exam %}
+                                            <span class="badge rounded-pill bg-success">已通过</span>
+                                        {% else %}
+                                            <span class="badge rounded-pill bg-danger">未通过</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if student.class_approved %}
+                                            <span class="badge rounded-pill bg-success">通过</span>
+                                        {% else %}
+                                            <span class="badge rounded-pill bg-danger">未通过</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div id="score-{{ student.student_id }}">
+                                            {% if student.comprehensive_score is not none %}
+                                                {% if student.comprehensive_score >= 90 %}
+                                                    <span class="badge rounded-pill bg-success">
+                                                        {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                            {{ student.comprehensive_score|int }}
+                                                        {% else %}
+                                                            {{ student.comprehensive_score|round(1) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% elif student.comprehensive_score >= 80 %}
+                                                    <span class="badge rounded-pill bg-primary">
+                                                        {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                            {{ student.comprehensive_score|int }}
+                                                        {% else %}
+                                                            {{ student.comprehensive_score|round(1) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% elif student.comprehensive_score >= 70 %}
+                                                    <span class="badge rounded-pill bg-info">
+                                                        {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                            {{ student.comprehensive_score|int }}
+                                                        {% else %}
+                                                            {{ student.comprehensive_score|round(1) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% elif student.comprehensive_score >= 60 %}
+                                                    <span class="badge rounded-pill bg-warning">
+                                                        {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                            {{ student.comprehensive_score|int }}
+                                                        {% else %}
+                                                            {{ student.comprehensive_score|round(1) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge rounded-pill bg-danger">
+                                                        {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                            {{ student.comprehensive_score|int }}
+                                                        {% else %}
+                                                            {{ student.comprehensive_score|round(1) }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge rounded-pill bg-secondary">未评分</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown{{ loop.index }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                操作
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionDropdown{{ loop.index }}">
+                                                <li><a class="dropdown-item" href="{{ url_for('teacher.view_student', student_id=student.student_id) }}"><i class="fas fa-eye me-2"></i> 查看</a></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('teacher.edit_student', student_id=student.student_id) }}"><i class="fas fa-edit me-2"></i> 编辑</a></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('teacher.calculate_score', student_id=student.student_id) }}"><i class="fas fa-calculator me-2"></i> 计算评分</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete('{{ student.student_id }}')"><i class="fas fa-trash me-2"></i> 删除</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">暂无学生数据</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 分页 -->
+            <div class="pagination-container mt-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="pagination-info">
+                        显示 {{ (page-1) * per_page + 1 }}-{{ min((page-1) * per_page + per_page, students_total) }} 条，共 {{ students_total }} 条
+                    </div>
+                    <div>
+                        <nav>
+                            <ul class="pagination">
+                                {% if page > 1 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('teacher.filter_students', page=page-1, department=selected_department, class_name=selected_class, score_range=selected_score_range) }}" aria-label="上一页">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&laquo;</span>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                                    {% if p %}
+                                        {% if p != page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('teacher.filter_students', page=p, department=selected_department, class_name=selected_class, score_range=selected_score_range) }}">{{ p }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ p }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page < pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('teacher.filter_students', page=page+1, department=selected_department, class_name=selected_class, score_range=selected_score_range) }}" aria-label="下一页">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #c91c23;
+        --secondary-color: #6f42c1;
+        --success-color: #1cc88a;
+        --info-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --light-color: #f8f9fc;
+        --dark-color: #5a5c69;
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+    }
+    
+    /* 主内容区样式 */
+    .main-content {
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    /* 侧边栏 */
+    .glass-sidebar {
+        background-color: #c91c23;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        overflow-y: auto;
+    }
+    
+    .sidebar-content {
+        padding-bottom: 40px;
+    }
+    
+    .sidebar-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-title {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+    }
+    
+    .sidebar-user {
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .sidebar-nav {
+        padding: 15px;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-item.active .sidebar-link {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 12px 15px;
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    /* 卡片样式 */
+    .status-card {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .status-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background-color: rgba(13, 110, 253, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    /* 表格样式 */
+    .student-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+    
+    .student-table th {
+        font-weight: 600;
+        color: var(--dark-color);
+        border-top: none;
+        text-align: center;
+    }
+    
+    .student-table .student-row:hover {
+        background-color: rgba(201, 28, 35, 0.05);
+    }
+    
+    /* 操作按钮样式 */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;  /* 确保按钮居中 */
+    }
+    
+    .action-buttons .btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .action-buttons .btn i {
+        font-size: 14px;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* 搜索和筛选区域 */
+    .rounded-search {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* 搜索框样式 */
+    .form-control {
+        border-radius: 8px;
+        box-shadow: none !important;
+    }
+    
+    .form-control:focus {
+        box-shadow: none !important;
+    }
+    
+    /* 筛选按钮容器 */
+    .filter-buttons {
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+    }
+    
+    /* 筛选按钮样式 */
+    .btn-filter {
+        min-width: 120px;
+        height: 40px;
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 8px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* 搜索表单样式 */
+    .search-form {
+        padding-top: 0;
+    }
+    
+    .form-floating>.form-control {
+        padding: 1rem 0.75rem;
+    }
+    
+    .form-floating>label {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    /* 适应性修复 */
+    @media (max-width: 992px) {
+        .glass-sidebar {
+            position: fixed;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            height: 100%;
+            z-index: 1000;
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 移动端侧边栏切换
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.glass-sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击主内容区域时关闭侧边栏
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.addEventListener('click', function(e) {
+                    if (window.innerWidth < 992 && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+        }
+        
+        // 添加定时刷新评分数据的函数
+        function refreshScores() {
+            // 获取所有学生的ID
+            const scoreElements = document.querySelectorAll('[id^="score-"]');
+            const studentIds = Array.from(scoreElements).map(el => el.id.replace('score-', ''));
+            
+            if (studentIds.length === 0) return;
+            
+            // 批量获取学生的最新评分
+            fetch('/teacher/get_latest_scores', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ student_ids: studentIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新每个学生的评分显示
+                    Object.entries(data.scores).forEach(([studentId, score]) => {
+                        const scoreElement = document.getElementById(`score-${studentId}`);
+                        if (scoreElement) {
+                            if (score !== null) {
+                                let badgeClass = 'bg-secondary';
+                                if (score >= 90) badgeClass = 'bg-success';
+                                else if (score >= 80) badgeClass = 'bg-primary';
+                                else if (score >= 70) badgeClass = 'bg-info';
+                                else if (score >= 60) badgeClass = 'bg-warning';
+                                else badgeClass = 'bg-danger';
+                                
+                                // 判断是否为整数
+                                const displayScore = Number.isInteger(score) ? score : score.toFixed(1);
+                                
+                                scoreElement.innerHTML = `<span class="badge rounded-pill ${badgeClass}">${displayScore}</span>`;
+                            } else {
+                                scoreElement.innerHTML = '<span class="badge rounded-pill bg-secondary">未评分</span>';
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('刷新评分数据出错:', error));
+        }
+        
+        // 每60秒刷新一次评分数据
+        setInterval(refreshScores, 60000);
+        
+        // 页面加载时立即刷新一次
+        refreshScores();
+    });
+</script>
+{% endblock %} 

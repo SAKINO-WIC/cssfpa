@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}重定向循环错误{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">检测到重定向循环</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <p>系统检测到页面之间存在循环重定向问题，已自动终止以防止浏览器错误。</p>
+                    </div>
+
+                    <h5>可能的原因：</h5>
+                    <ul>
+                        <li>权限验证和登录重定向逻辑冲突</li>
+                        <li>路由规则之间存在冲突</li>
+                        <li>角色权限验证出现问题</li>
+                        <li>Cookie或会话状态不一致</li>
+                    </ul>
+
+                    <h5>重定向历史：</h5>
+                    <div class="bg-light p-3 rounded" style="overflow-x: auto;">
+                        <ol>
+                            {% for path in history %}
+                            <li>{{ path }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+
+                    <h5 class="mt-3">建议操作：</h5>
+                    <ul>
+                        <li>清除浏览器缓存和Cookie</li>
+                        <li>使用无痕/隐私浏览模式重试</li>
+                        <li>尝试直接访问其他页面，例如 <a href="{{ url_for('auth.login') }}">登录页面</a></li>
+                        <li>若问题持续，请联系系统管理员</li>
+                    </ul>
+
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">返回登录页面</a>
+                        <button class="btn btn-secondary ms-2" onclick="localStorage.clear(); sessionStorage.clear(); document.cookie.split(';').forEach(function(c) { document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/'); }); window.location.reload();">清除本地存储并刷新</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

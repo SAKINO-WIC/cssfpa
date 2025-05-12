@@ -1,0 +1,998 @@
+{% extends "base.html" %}
+
+{% block title %}编辑个人信息 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <nav class="col-md-2 glass-sidebar sidebar">
+            <div class="position-sticky pt-3">
+                <div class="text-center mb-4">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-3">
+                        <span>{{ student.name[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ student.name }}</h5>
+                    <small class="text-white-50">{{ student.student_id }}</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.index') }}" class="nav-link">
+                            <i class="fa fa-user-circle me-2"></i>个人信息
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.index', tab='files') }}" class="nav-link">
+                            <i class="fa fa-file me-2"></i>文件管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.change_password') }}" class="nav-link">
+                            <i class="fa fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                            <i class="fa fa-sign-out me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-outline-danger sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">编辑个人信息</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('student.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> 返回
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('student.edit') }}" id="editForm">
+                        {{ form.csrf_token }}
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> 带<span class="text-danger">*</span>标记的为必填字段
+                        </div>
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>提交表单时发生错误</h5>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items() %}
+                                    {% for error in errors %}
+                                    <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-address-card me-2"></i>基本信息</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="name">姓名 <span class="text-danger">*</span></label>
+                                            {{ form.name(class="form-control", id="name", placeholder="请输入姓名") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="gender">性别 <span class="text-danger">*</span></label>
+                                            {{ form.gender(class="form-select", id="gender") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="id_card">身份证号 <span class="text-danger">*</span></label>
+                                            {{ form.id_card(class="form-control", id="id_card", placeholder="请输入身份证号") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="birth_date">出生日期 <span class="text-danger">*</span></label>
+                                            {{ form.birth_date(class="form-control", id="birth_date", type="date") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="ethnicity">民族 <span class="text-danger">*</span></label>
+                                            {{ form.ethnicity(class="form-control", id="ethnicity", placeholder="请输入民族") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="hometown">籍贯 <span class="text-danger">*</span></label>
+                                            {{ form.hometown(class="form-control", id="hometown", placeholder="请输入籍贯") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="phone">手机号码 <span class="text-danger">*</span></label>
+                                            {{ form.phone(class="form-control", id="phone", placeholder="请输入手机号码") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>学籍信息</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="department">学院 <span class="text-danger">*</span></label>
+                                            {{ form.department(class="form-control", id="department") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="major">专业 <span class="text-danger">*</span></label>
+                                            {{ form.major(class="form-control", id="major", placeholder="请输入专业") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="class_name">班级 <span class="text-danger">*</span></label>
+                                            {{ form.class_name(class="form-control", id="class_name", placeholder="请输入班级") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-flag me-2"></i>政治信息</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="political_status">政治面貌 <span class="text-danger">*</span></label>
+                                            {{ form.political_status(class="form-select", id="political_status") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="league_member_id">团员编号</label>
+                                            {{ form.league_member_id(class="form-control", id="league_member_id", placeholder="请输入团员编号") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="league_branch">团支部</label>
+                                            {{ form.league_branch(class="form-control", id="league_branch", placeholder="请输入团支部") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="join_league_date">入团时间</label>
+                                            {{ form.join_league_date(class="form-control", id="join_league_date", type="date") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="has_application">是否递交入党申请书</label>
+                                            <div class="form-control bg-light">
+                                                {{ form.has_application() }} 是
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="application_date">递交入党申请书时间</label>
+                                            {{ form.application_date(class="form-control", id="application_date", type="date") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-book me-2"></i>学业信息</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="has_failed_course">是否有挂科</label>
+                                            <div class="form-control bg-light">
+                                                {{ form.has_failed_course() }} 是
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="comprehensive_test_score">综测成绩</label>
+                                            {{ form.comprehensive_test_score(class="form-control", id="comprehensive_test_score", placeholder="请输入综测成绩") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="cet4_score">英语四级成绩</label>
+                                            {{ form.cet4_score(class="form-control", id="cet4_score", placeholder="请输入英语四级成绩") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="cet6_score">英语六级成绩</label>
+                                            {{ form.cet6_score(class="form-control", id="cet6_score", placeholder="请输入英语六级成绩") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold" for="volunteer_hours">志愿服务时长</label>
+                                            {{ form.volunteer_hours(class="form-control", id="volunteer_hours", placeholder="请输入志愿服务时长") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 成就经历区域 -->
+                        <h5 class="mb-4 mt-5">成就经历信息</h5>
+                        <hr class="mb-4">
+                        
+                        <!-- 获奖情况 -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">获奖情况</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if student.awards %}
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-bordered table-hover" id="awardsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>奖项名称</th>
+                                                <th>获奖等级</th>
+                                                <th>颁发单位</th>
+                                                <th>获奖日期</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="awardsTableBody">
+                                            {% for award in awards %}
+                                            <tr>
+                                                <td>{{ award.name }}</td>
+                                                <td>{{ award.level }}</td>
+                                                <td>{{ award.organization }}</td>
+                                                <td>{{ award.date }}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-award">删除</button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- 隐藏的JSON数据字段 - 用于后端处理 -->
+                                <input type="hidden" id="awards" name="awards" value="{{ student.awards or '[]' }}">
+                                
+                                <!-- 添加新奖项的表单 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">添加新奖项</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">奖项名称</label>
+                                                    <input type="text" class="form-control" id="newAwardName" placeholder="例如：三好学生、优秀团员">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">获奖等级</label>
+                                                    <select class="form-select" id="newAwardLevel">
+                                                        <option value="">请选择等级</option>
+                                                        <option value="国家级">国家级</option>
+                                                        <option value="省级">省级</option>
+                                                        <option value="市级">市级</option>
+                                                        <option value="校级">校级</option>
+                                                        <option value="院级">院级</option>
+                                                        <option value="其他">其他</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">颁发单位</label>
+                                                    <input type="text" class="form-control" id="newAwardOrganization" placeholder="例如：天津师范大学">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">获奖日期</label>
+                                                    <input type="date" class="form-control" id="newAwardDate">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-primary" id="addAwardBtn">
+                                                <i class="fas fa-plus me-1"></i> 添加奖项
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 社会实践经历 -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">社会实践经历</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if student.social_practice %}
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-bordered table-hover" id="practicesTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>活动名称</th>
+                                                <th>组织机构</th>
+                                                <th>开始日期</th>
+                                                <th>结束日期</th>
+                                                <th>活动描述</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="practicesTableBody">
+                                            {% for practice in practices %}
+                                            <tr>
+                                                <td>{{ practice.title }}</td>
+                                                <td>{{ practice.organization }}</td>
+                                                <td>{{ practice.start_date }}</td>
+                                                <td>{{ practice.end_date }}</td>
+                                                <td>{{ practice.description }}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-practice">删除</button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- 隐藏的JSON数据字段 - 用于后端处理 -->
+                                <input type="hidden" id="social_practice" name="social_practice" value="{{ student.social_practice or '[]' }}">
+                                
+                                <!-- 添加新社会实践的表单 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">添加新社会实践</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">活动名称</label>
+                                                    <input type="text" class="form-control" id="newPracticeTitle" placeholder="例如：暑期社会实践活动">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">组织机构</label>
+                                                    <input type="text" class="form-control" id="newPracticeOrganization" placeholder="例如：天津市红十字会">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">开始日期</label>
+                                                    <input type="date" class="form-control" id="newPracticeStartDate">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">结束日期</label>
+                                                    <input type="date" class="form-control" id="newPracticeEndDate">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">活动描述</label>
+                                                    <textarea class="form-control" id="newPracticeDescription" rows="3" placeholder="请简要描述活动内容和收获..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-primary" id="addPracticeBtn">
+                                                <i class="fas fa-plus me-1"></i> 添加社会实践
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-undo me-1"></i> 重置
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save me-1"></i> 保存更改
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+        --party-red-dark: #a11c10;
+        --sidebar-width: 250px;
+    }
+
+    .sidebar {
+        min-height: 100vh;
+        background-color: var(--party-red);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        will-change: transform;
+        /* 使用GPU加速 */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+    }
+    
+    @media (max-width: 767.98px) {
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100%;
+            z-index: 1000;
+            transform: translateX(-100%);
+            /* 使用硬件加速 */
+            -webkit-transform: translateX(-100%);
+        }
+        
+        .sidebar.show {
+            transform: translateX(0);
+            -webkit-transform: translateX(0);
+        }
+        
+        body {
+            overflow-x: hidden;
+        }
+    }
+    
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.85);
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        /* 简化过渡效果，只保留颜色和背景变化 */
+        transition: color 0.2s ease, background-color 0.2s ease;
+    }
+    
+    .sidebar .nav-link:hover, 
+    .sidebar .nav-link.active {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.15);
+        /* 移除导致闪烁的transform效果 */
+    }
+    
+    /* 新增样式 */
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--party-red);
+        box-shadow: 0 0 0 0.25rem rgba(var(--party-red-rgb), 0.25);
+    }
+
+    /* 优化表格显示 */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        will-change: transform;
+        transform: translateZ(0);
+    }
+
+    /* 减少内容区域的动画效果，减少重绘 */
+    main {
+        will-change: auto;
+        backface-visibility: hidden;
+    }
+    
+    /* 优化表格性能 */
+    table {
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-collapse: collapse;
+        table-layout: fixed; /* 使用固定表格布局，提高性能 */
+        width: 100%;
+    }
+    
+    /* 设置固定列宽，避免内容变化导致重排 */
+    #awardsTable th:nth-child(1), #practicesTable th:nth-child(1) { width: 20%; }
+    #awardsTable th:nth-child(2), #practicesTable th:nth-child(2) { width: 15%; }
+    #awardsTable th:nth-child(3), #practicesTable th:nth-child(3) { width: 20%; }
+    #awardsTable th:nth-child(4), #practicesTable th:nth-child(4) { width: 15%; }
+    #awardsTable th:nth-child(5), #practicesTable th:nth-child(5) { width: 10%; }
+    #practicesTable th:nth-child(5) { width: 20%; }
+    #practicesTable th:nth-child(6) { width: 10%; }
+    
+    /* 优化表格内容单元格，防止内容过长导致布局变化 */
+    table td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* 可以展开查看的单元格(如描述) */
+    .expandable-cell {
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .expandable-cell.expanded {
+        white-space: normal;
+        word-break: break-word;
+    }
+    
+    /* 成就经历部分容器优化 */
+    .achievements-container {
+        will-change: contents;
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    /* 优化按钮过渡效果，减少重绘 */
+    .btn {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    
+    /* 减少表格变动时的闪烁 */
+    tbody tr {
+        transition: opacity 0.1s ease;
+    }
+    
+    /* 移除可能引起闪烁的阴影过渡 */
+    .card, .btn, .form-control, .form-select {
+        transition: none;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 侧边栏切换按钮
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('show');
+            });
+        }
+        
+        // 当用户选择"是否有入党申请书"复选框时更新申请日期字段的状态
+        const hasApplicationCheckbox = document.getElementById('has_application');
+        const applicationDateField = document.getElementById('application_date');
+        
+        function updateApplicationDateField() {
+            if (hasApplicationCheckbox.checked) {
+                applicationDateField.removeAttribute('disabled');
+            } else {
+                applicationDateField.setAttribute('disabled', 'disabled');
+                applicationDateField.value = '';
+            }
+        }
+        
+        // 初始设置
+        updateApplicationDateField();
+        
+        // 监听变化
+        hasApplicationCheckbox.addEventListener('change', updateApplicationDateField);
+
+        // ======= 使描述单元格可展开 =======
+        document.querySelectorAll('.expandable-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                this.classList.toggle('expanded');
+            });
+        });
+        
+        // ======= 获奖情况处理 =======
+        // 获取获奖情况相关元素
+        const awardsInput = document.getElementById('awards');
+        const awardsTableBody = document.getElementById('awardsTableBody');
+        const addAwardBtn = document.getElementById('addAwardBtn');
+        
+        // 使用批量操作和requestAnimationFrame优化DOM更新
+        let awardsUpdatePending = false;
+        
+        // 获取所有奖项数据
+        let awardsData = [];
+        try {
+            awardsData = JSON.parse(awardsInput.value || '[]');
+        } catch (e) {
+            console.error('解析奖项数据出错:', e);
+            awardsData = [];
+        }
+        
+        // 更新奖项数据到隐藏字段
+        function updateAwardsInput() {
+            awardsInput.value = JSON.stringify(awardsData);
+        }
+        
+        // 添加新奖项
+        addAwardBtn.addEventListener('click', function() {
+            const name = document.getElementById('newAwardName').value.trim();
+            const level = document.getElementById('newAwardLevel').value.trim();
+            const organization = document.getElementById('newAwardOrganization').value.trim();
+            const date = document.getElementById('newAwardDate').value;
+            
+            if (!name || !level || !organization || !date) {
+                alert('请填写完整的奖项信息');
+                return;
+            }
+            
+            // 创建新奖项对象
+            const newAward = {
+                name: name,
+                level: level,
+                organization: organization,
+                date: date
+            };
+            
+            // 添加到数据数组
+            awardsData.push(newAward);
+            
+            // 更新隐藏字段
+            updateAwardsInput();
+            
+            // 使用requestAnimationFrame优化DOM更新
+            if (!awardsUpdatePending) {
+                awardsUpdatePending = true;
+                requestAnimationFrame(() => {
+                    addAwardToTable(newAward);
+                    awardsUpdatePending = false;
+                });
+            }
+            
+            // 清空表单
+            document.getElementById('newAwardName').value = '';
+            document.getElementById('newAwardLevel').value = '';
+            document.getElementById('newAwardOrganization').value = '';
+            document.getElementById('newAwardDate').value = '';
+        });
+        
+        // 添加奖项到表格 - 优化DOM操作，减少重排和重绘
+        function addAwardToTable(award) {
+            // 如果表格不存在则创建
+            if (!awardsTableBody) return;
+            
+            const tr = document.createElement('tr');
+            
+            // 使用DocumentFragment减少DOM操作
+            const fragment = document.createDocumentFragment();
+            
+            const nameTd = document.createElement('td');
+            nameTd.textContent = award.name;
+            fragment.appendChild(nameTd);
+            
+            const levelTd = document.createElement('td');
+            levelTd.textContent = award.level;
+            fragment.appendChild(levelTd);
+            
+            const orgTd = document.createElement('td');
+            orgTd.textContent = award.organization;
+            fragment.appendChild(orgTd);
+            
+            const dateTd = document.createElement('td');
+            dateTd.textContent = award.date;
+            fragment.appendChild(dateTd);
+            
+            const actionTd = document.createElement('td');
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-sm btn-outline-danger remove-award';
+            removeBtn.textContent = '删除';
+            actionTd.appendChild(removeBtn);
+            fragment.appendChild(actionTd);
+            
+            tr.appendChild(fragment);
+            
+            // 为删除按钮添加事件，使用事件委托方式减少事件监听器数量
+            removeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 从数据数组中删除
+                const index = awardsData.findIndex(a => 
+                    a.name === award.name && 
+                    a.level === award.level && 
+                    a.organization === award.organization && 
+                    a.date === award.date
+                );
+                
+                if (index !== -1) {
+                    awardsData.splice(index, 1);
+                    // 更新隐藏字段
+                    updateAwardsInput();
+                }
+                
+                // 平滑移除行，减少闪烁
+                tr.style.opacity = '0';
+                setTimeout(() => {
+                    tr.remove();
+                }, 100);
+            });
+            
+            awardsTableBody.appendChild(tr);
+            
+            // 触发重排后立即设置透明度为1，减少闪烁
+            requestAnimationFrame(() => {
+                tr.style.opacity = '1';
+            });
+        }
+        
+        // 为已有的删除按钮添加事件，使用事件委托
+        if (awardsTableBody) {
+            awardsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-award')) {
+                    const tr = e.target.closest('tr');
+                    const index = Array.from(awardsTableBody.children).indexOf(tr);
+                    
+                    if (index !== -1 && index < awardsData.length) {
+                        awardsData.splice(index, 1);
+                        updateAwardsInput();
+                        
+                        // 平滑移除行，减少闪烁
+                        tr.style.opacity = '0';
+                        setTimeout(() => {
+                            tr.remove();
+                        }, 100);
+                    }
+                }
+            });
+        }
+
+        // ======= 社会实践经历处理 =======
+        // 获取社会实践相关元素
+        const practicesInput = document.getElementById('social_practice');
+        const practicesTableBody = document.getElementById('practicesTableBody');
+        const addPracticeBtn = document.getElementById('addPracticeBtn');
+        
+        // 使用批量操作和requestAnimationFrame优化DOM更新
+        let practicesUpdatePending = false;
+        
+        // 获取所有社会实践数据
+        let practicesData = [];
+        try {
+            practicesData = JSON.parse(practicesInput.value || '[]');
+        } catch (e) {
+            console.error('解析社会实践数据出错:', e);
+            practicesData = [];
+        }
+        
+        // 更新社会实践数据到隐藏字段
+        function updatePracticesInput() {
+            practicesInput.value = JSON.stringify(practicesData);
+        }
+        
+        // 添加新社会实践
+        addPracticeBtn.addEventListener('click', function() {
+            const title = document.getElementById('newPracticeTitle').value.trim();
+            const organization = document.getElementById('newPracticeOrganization').value.trim();
+            const startDate = document.getElementById('newPracticeStartDate').value;
+            const endDate = document.getElementById('newPracticeEndDate').value;
+            const description = document.getElementById('newPracticeDescription').value.trim();
+            
+            if (!title || !organization || !startDate || !endDate) {
+                alert('请填写完整的社会实践信息（描述可选）');
+                return;
+            }
+            
+            // 创建新社会实践对象
+            const newPractice = {
+                title: title,
+                organization: organization,
+                start_date: startDate,
+                end_date: endDate,
+                description: description
+            };
+            
+            // 添加到数据数组
+            practicesData.push(newPractice);
+            
+            // 更新隐藏字段
+            updatePracticesInput();
+            
+            // 使用requestAnimationFrame优化DOM更新
+            if (!practicesUpdatePending) {
+                practicesUpdatePending = true;
+                requestAnimationFrame(() => {
+                    addPracticeToTable(newPractice);
+                    practicesUpdatePending = false;
+                });
+            }
+            
+            // 清空表单
+            document.getElementById('newPracticeTitle').value = '';
+            document.getElementById('newPracticeOrganization').value = '';
+            document.getElementById('newPracticeStartDate').value = '';
+            document.getElementById('newPracticeEndDate').value = '';
+            document.getElementById('newPracticeDescription').value = '';
+        });
+        
+        // 添加社会实践到表格 - 优化DOM操作，减少重排和重绘
+        function addPracticeToTable(practice) {
+            // 如果表格不存在则创建
+            if (!practicesTableBody) return;
+            
+            const tr = document.createElement('tr');
+            
+            // 使用DocumentFragment减少DOM操作
+            const fragment = document.createDocumentFragment();
+            
+            const titleTd = document.createElement('td');
+            titleTd.textContent = practice.title;
+            fragment.appendChild(titleTd);
+            
+            const orgTd = document.createElement('td');
+            orgTd.textContent = practice.organization;
+            fragment.appendChild(orgTd);
+            
+            const startDateTd = document.createElement('td');
+            startDateTd.textContent = practice.start_date;
+            fragment.appendChild(startDateTd);
+            
+            const endDateTd = document.createElement('td');
+            endDateTd.textContent = practice.end_date;
+            fragment.appendChild(endDateTd);
+            
+            const descTd = document.createElement('td');
+            descTd.className = 'expandable-cell';
+            descTd.textContent = practice.description;
+            descTd.title = '点击展开/收起';
+            descTd.addEventListener('click', function() {
+                this.classList.toggle('expanded');
+            });
+            fragment.appendChild(descTd);
+            
+            const actionTd = document.createElement('td');
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-sm btn-outline-danger remove-practice';
+            removeBtn.textContent = '删除';
+            actionTd.appendChild(removeBtn);
+            fragment.appendChild(actionTd);
+            
+            tr.appendChild(fragment);
+            
+            // 为删除按钮添加事件，使用事件委托方式
+            removeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 从数据数组中删除
+                const index = practicesData.findIndex(p => 
+                    p.title === practice.title && 
+                    p.organization === practice.organization && 
+                    p.start_date === practice.start_date && 
+                    p.end_date === practice.end_date
+                );
+                
+                if (index !== -1) {
+                    practicesData.splice(index, 1);
+                    // 更新隐藏字段
+                    updatePracticesInput();
+                }
+                
+                // 平滑移除行，减少闪烁
+                tr.style.opacity = '0';
+                setTimeout(() => {
+                    tr.remove();
+                }, 100);
+            });
+            
+            practicesTableBody.appendChild(tr);
+            
+            // 触发重排后立即设置透明度为1，减少闪烁
+            requestAnimationFrame(() => {
+                tr.style.opacity = '1';
+            });
+        }
+        
+        // 为已有的删除按钮添加事件 - 使用事件委托
+        if (practicesTableBody) {
+            practicesTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-practice')) {
+                    const tr = e.target.closest('tr');
+                    const index = Array.from(practicesTableBody.children).indexOf(tr);
+                    
+                    if (index !== -1 && index < practicesData.length) {
+                        practicesData.splice(index, 1);
+                        updatePracticesInput();
+                        
+                        // 平滑移除行，减少闪烁
+                        tr.style.opacity = '0';
+                        setTimeout(() => {
+                            tr.remove();
+                        }, 100);
+                    }
+                }
+            });
+        }
+        
+        // 为可展开的描述单元格添加事件
+        document.querySelectorAll('.expandable-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                this.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
+{% endblock %}

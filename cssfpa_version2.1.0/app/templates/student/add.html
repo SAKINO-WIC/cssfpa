@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>添加学生</h2>
+    
+    <form method="POST" class="mt-4">
+        {{ form.csrf_token }}
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.student_id.label(class="form-label") }}
+                {{ form.student_id(class="form-control") }}
+                {% if form.student_id.errors %}
+                    {% for error in form.student_id.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.gender.label(class="form-label") }}
+                {{ form.gender(class="form-select") }}
+                {% if form.gender.errors %}
+                    {% for error in form.gender.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.phone.label(class="form-label") }}
+                {{ form.phone(class="form-control") }}
+                {% if form.phone.errors %}
+                    {% for error in form.phone.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                {{ form.department.label(class="form-label") }}
+                {{ form.department(class="form-control") }}
+                {% if form.department.errors %}
+                    {% for error in form.department.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="col-md-4 mb-3">
+                {{ form.major.label(class="form-label") }}
+                {{ form.major(class="form-control") }}
+                {% if form.major.errors %}
+                    {% for error in form.major.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="col-md-4 mb-3">
+                {{ form.class_name.label(class="form-label") }}
+                {{ form.class_name(class="form-control") }}
+                {% if form.class_name.errors %}
+                    {% for error in form.class_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a href="{{ url_for('student.index') }}" class="btn btn-secondary">返回</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 

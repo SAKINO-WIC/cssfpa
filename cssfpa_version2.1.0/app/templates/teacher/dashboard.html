@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}数据统计 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <div class="col-lg-2 col-md-3 glass-sidebar shadow-sm">
+            <div class="sidebar-header py-3">
+                <div class="user-avatar text-center mb-3">
+                    <img src="{{ url_for('static', filename='img/avatar.png') }}" class="rounded-circle" alt="用户头像" width="60">
+                </div>
+                <div class="user-info text-center">
+                    <p class="mb-1">{{ current_user.name }}</p>
+                    <small class="text-muted">{{ '教师' if current_user.role == 'teacher' else '学生' }}</small>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="sidebar-item">
+                    <a href="{{ url_for('teacher.index') }}" class="sidebar-link">
+                        <i class="fas fa-user-graduate me-2"></i>学生管理
+                    </a>
+                </div>
+                <div class="sidebar-item">
+                    <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link">
+                        <i class="fas fa-cog me-2"></i>评分配置
+                    </a>
+                </div>
+                <div class="sidebar-item">
+                    <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link">
+                        <i class="fas fa-calculator me-2"></i>批量评分
+                    </a>
+                </div>
+                <div class="sidebar-item">
+                    <a href="{{ url_for('teacher.dashboard') }}" class="sidebar-link active">
+                        <i class="fas fa-chart-bar me-2"></i>数据统计
+                    </a>
+                </div>
+                <div class="sidebar-item">
+                    <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                        <i class="fas fa-key me-2"></i>修改密码
+                    </a>
+                </div>
+                <div class="sidebar-item">
+                    <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                        <i class="fas fa-sign-out-alt me-2"></i>退出系统
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区 -->
+        <main class="col-lg-10 col-md-9 ms-auto px-4">
+            <!-- 顶部导航 -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <button id="sidebarToggle" class="navbar-toggler d-md-none" type="button">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="h2">数据统计</h1>
+                <div class="time-display text-muted">
+                    <i class="fas fa-clock me-1"></i><span id="current-time"></span>
+                </div>
+            </div>
+            
+            <!-- 数据统计内容 -->
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center">总学生数</h5>
+                            <div class="text-center mt-3 mb-3">
+                                <span class="display-4 fw-bold text-primary">{{ total_students }}</span>
+                            </div>
+                            <p class="card-text text-muted mt-auto text-center">当前系统中的学生总数</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center">已评分学生数</h5>
+                            <div class="text-center mt-3 mb-3">
+                                <span class="display-4 fw-bold text-success">{{ StudentScore.query.distinct(StudentScore.student_id).count() }}</span>
+                            </div>
+                            <p class="card-text text-muted mt-auto text-center">已完成综合评分的学生数量</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center">评分平均分</h5>
+                            <div class="text-center mt-3 mb-3">
+                                <span class="display-4 fw-bold text-info">
+                                    {% set avg_score = StudentScore.query.with_entities(func.avg(StudentScore.total_score)).scalar() %}
+                                    {{ avg_score|round(1) if avg_score else '暂无' }}
+                                </span>
+                            </div>
+                            <p class="card-text text-muted mt-auto text-center">所有已评分学生的平均分</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center">基础条件合格率</h5>
+                            <div class="text-center mt-3 mb-3">
+                                <span class="display-4 fw-bold text-warning">
+                                    {% set total_scores = StudentScore.query.count() %}
+                                    {% set passed_count = StudentScore.query.filter_by(passed_base_conditions=True).count() %}
+                                    {{ ((passed_count / total_scores) * 100)|round if total_scores > 0 else 0 }}%
+                                </span>
+                            </div>
+                            <p class="card-text text-muted mt-auto text-center">满足基础条件的学生比例</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表部分 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">专业分布</h5>
+                            <button class="btn btn-sm btn-outline-secondary chart-download-btn" data-chart-id="majorDistributionChart">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="majorDistributionChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">评分区间分布</h5>
+                            <button class="btn btn-sm btn-outline-secondary chart-download-btn" data-chart-id="scoreDistributionChart">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="scoreDistributionChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">评分类别对比</h5>
+                            <button class="btn btn-sm btn-outline-secondary chart-download-btn" data-chart-id="scoreComparisonChart">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="scoreComparisonChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">评分趋势</h5>
+                            <button class="btn btn-sm btn-outline-secondary chart-download-btn" data-chart-id="scoreTrendChart">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="scoreTrendChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 隐藏数据元素，用于图表 -->
+<div class="d-none">
+    <!-- 专业分布数据 -->
+    <div id="major-data">{{ major_labels|tojson }}</div>
+    <div id="major-values">{{ major_data|tojson }}</div>
+    
+    <!-- 评分区间数据 -->
+    <div id="score-range-data">{{ score_range_data|tojson }}</div>
+    
+    <!-- 评分类别数据 -->
+    <div id="category-labels">{{ category_labels|tojson }}</div>
+    <div id="category-data">{{ category_data|tojson }}</div>
+    
+    <!-- 评分趋势数据 -->
+    <div id="trend-labels">{{ trend_labels|tojson }}</div>
+    <div id="trend-data">{{ trend_data|tojson }}</div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    body {
+        font-family: 'Noto Sans SC', sans-serif;
+        background-color: #f8f9fa;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    /* 侧边栏样式 */
+    .glass-sidebar {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 0;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+    }
+    
+    @media (max-width: 767.98px) {
+        .glass-sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        main {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+    }
+    
+    .sidebar-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar-nav {
+        padding-top: 1rem;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        color: #212529;
+        text-decoration: none;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .sidebar-link.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    #sidebarToggle {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        margin-right: 1rem;
+    }
+    
+    .chart-download-btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .time-display {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 侧边栏切换逻辑
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.glass-sidebar');
+        const mainContent = document.querySelector('main');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击主内容区域时关闭侧边栏（在移动设备上）
+            mainContent.addEventListener('click', function() {
+                if (window.innerWidth < 768 && sidebar.classList.contains('show')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        }
+        
+        // 更新当前时间
+        const currentTimeElement = document.getElementById('current-time');
+        if (currentTimeElement) {
+            const updateTime = () => {
+                const now = new Date();
+                currentTimeElement.textContent = now.toLocaleString('zh-CN');
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+    
+        // 图表配置
+        const majorLabels = {{ major_labels|tojson }};
+        const majorData = {{ major_data|tojson }};
+        
+        // 专业分布图表
+        const majorCtx = document.getElementById('majorDistributionChart').getContext('2d');
+        const majorChart = new Chart(majorCtx, {
+            type: 'doughnut',
+            data: {
+                labels: majorLabels,
+                datasets: [{
+                    data: majorData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)',
+                        'rgba(83, 102, 255, 0.7)',
+                        'rgba(40, 159, 64, 0.7)',
+                        'rgba(210, 199, 199, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(199, 199, 199, 1)',
+                        'rgba(83, 102, 255, 1)',
+                        'rgba(40, 159, 64, 1)',
+                        'rgba(210, 199, 199, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+        
+        // 评分区间分布图表
+        const scoreRanges = ['0-59', '60-69', '70-79', '80-89', '90-100'];
+        const scoreRangeData = {{ score_range_data|tojson }};
+        
+        const scoreDistCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+        const scoreDistChart = new Chart(scoreDistCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [{
+                    label: '学生数量',
+                    data: scoreRangeData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '学生数量'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '分数区间'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 评分类别对比图表
+        const categoryLabels = {{ category_labels|tojson }};
+        const categoryData = {{ category_data|tojson }};
+        
+        const categoryCtx = document.getElementById('scoreComparisonChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'radar',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: '平均分',
+                    data: categoryData,
+                    backgroundColor: 'rgba(13, 110, 253, 0.3)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(13, 110, 253, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(13, 110, 253, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+        
+        // 评分趋势图表
+        const trendLabels = {{ trend_labels|tojson }};
+        const trendData = {{ trend_data|tojson }};
+        
+        const trendCtx = document.getElementById('scoreTrendChart').getContext('2d');
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: '平均综合评分',
+                    data: trendData,
+                    fill: false,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 3,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: function() {
+                            if (trendData.length === 0) return 0;
+                            const min = Math.min.apply(null, trendData);
+                            return min - 5 > 0 ? min - 5 : 0;
+                        }(),
+                        max: function() {
+                            if (trendData.length === 0) return 100;
+                            return Math.max.apply(null, trendData) + 5;
+                        }(),
+                        title: {
+                            display: true,
+                            text: '平均分'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '日期'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 图表下载功能
+        const downloadButtons = document.querySelectorAll('.chart-download-btn');
+        if (downloadButtons.length > 0) {
+            downloadButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const chartId = this.getAttribute('data-chart-id');
+                    const chartCanvas = document.getElementById(chartId);
+                    if (chartCanvas) {
+                        const link = document.createElement('a');
+                        link.download = chartId + '-' + new Date().toISOString().split('T')[0] + '.png';
+                        link.href = chartCanvas.toDataURL('image/png');
+                        link.click();
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

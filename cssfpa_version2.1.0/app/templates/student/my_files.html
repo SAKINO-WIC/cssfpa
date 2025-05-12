@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}文件管理 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<!-- 移除重复的flash消息容器 -->
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <nav class="col-md-2 d-none d-md-block glass-sidebar sidebar">
+            <div class="position-sticky pt-3">
+                <div class="text-center mb-4">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-3">
+                        <span>{{ current_user.student.name[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ current_user.student.name }}</h5>
+                    <small class="text-white-50">{{ current_user.username }}</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.index') }}" class="nav-link">
+                            <i class="fa fa-user-circle me-2"></i>个人信息
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.my_files') }}" class="nav-link active">
+                            <i class="fa fa-file me-2"></i>文件管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('student.change_password') }}" class="nav-link">
+                            <i class="fa fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                            <i class="fa fa-sign-out me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 ms-sm-auto px-md-4" id="main-content">
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-outline-danger sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- 直接包含文件管理内容，不使用AJAX加载 -->
+            {% include 'student/my_files_content.html' %}
+        </main>
+    </div>
+</div>
+
+<style>
+    :root {
+        --party-red: #c12c1f;
+        --font-main: 'Microsoft YaHei', sans-serif;
+    }
+    
+    body {
+        font-family: var(--font-main);
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* 侧边栏样式 */
+    .glass-sidebar {
+        background: rgba(193, 44, 31, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding-top: 1rem;
+        min-height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        position: sticky;
+        top: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-placeholder span {
+        font-size: 2rem;
+        color: white;
+    }
+    
+    .sidebar-nav {
+        margin-top: 2rem;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .sidebar-nav .nav-link {
+        color: rgba(255,255,255,0.75);
+        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-nav .nav-link:hover {
+        color: white;
+        background-color: rgba(255,255,255,0.1);
+    }
+    
+    .sidebar-nav .nav-link.active {
+        color: white;
+        background-color: rgba(255,255,255,0.2);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* 移除重复的toast样式 */
+    
+    /* 主内容区样式 */
+    .main-container {
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.75rem;
+        color: #333;
+        margin: 0;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid #eee;
+        padding: 1rem 1.25rem;
+    }
+    
+    .card-title {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    .btn-primary {
+        background-color: var(--party-red);
+        border-color: var(--party-red);
+    }
+    
+    .btn-primary:hover {
+        background-color: #a11c10;
+        border-color: #a11c10;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .glass-sidebar {
+            position: fixed;
+            left: -100%;
+            z-index: 1030;
+            width: 80%;
+        }
+        
+        .glass-sidebar.show {
+            left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 处理侧边栏切换
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+    }
+    
+    // 文件上传表单AJAX提交
+    const uploadForm = document.getElementById('uploadForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 创建FormData对象
+            const formData = new FormData(this);
+            // 添加AJAX标识
+            formData.append('is_ajax', 'true');
+            
+            // 禁用提交按钮，防止重复提交
+            const submitBtn = uploadForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+            
+            // 发送AJAX请求
+            fetch('{{ url_for("student.upload_file") }}', {
+                method: 'POST',
+                body: formData,
+                // 不设置Content-Type，让浏览器自动处理
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络错误，请稍后重试');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 显示成功消息
+                const messageContainer = document.createElement('div');
+                messageContainer.className = 'toast show align-items-center text-white bg-success border-0';
+                messageContainer.setAttribute('role', 'alert');
+                messageContainer.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${data.message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="关闭"></button>
+                    </div>
+                `;
+                
+                document.getElementById('flash-messages-container').appendChild(messageContainer);
+                
+                // 重置表单
+                uploadForm.reset();
+                
+                // 刷新文件列表
+                location.reload();
+            })
+            .catch(error => {
+                // 显示错误消息
+                const messageContainer = document.createElement('div');
+                messageContainer.className = 'toast show align-items-center text-white bg-danger border-0';
+                messageContainer.setAttribute('role', 'alert');
+                messageContainer.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            上传失败: ${error.message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="关闭"></button>
+                    </div>
+                `;
+                
+                document.getElementById('flash-messages-container').appendChild(messageContainer);
+            })
+            .finally(() => {
+                // 恢复提交按钮状态
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload"></i> 上传文件';
+            });
+        });
+    }
+    
+    // 文件删除按钮AJAX处理
+    document.addEventListener('click', function(e) {
+        // 匹配删除按钮
+        if (e.target.closest('.btn-outline-danger[title="删除"]')) {
+            e.preventDefault();
+            const deleteBtn = e.target.closest('.btn-outline-danger[title="删除"]');
+            const deleteUrl = deleteBtn.getAttribute('href');
+            
+            // 确认删除
+            if (confirm('确定要删除这个文件吗？')) {
+                // 发送AJAX删除请求
+                fetch(deleteUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('删除失败，请稍后重试');
+                    }
+                    // 成功后移除表格行
+                    const row = deleteBtn.closest('tr');
+                    if (row) {
+                        row.style.backgroundColor = '#ffdddd';
+                        row.style.transition = 'all 0.5s';
+                        setTimeout(() => {
+                            row.style.opacity = 0;
+                            setTimeout(() => {
+                                row.remove();
+                                
+                                // 检查表格是否为空，如果空则显示"无文件"提示
+                                const tbody = document.querySelector('.file-table tbody');
+                                if (tbody && tbody.children.length === 0) {
+                                    const container = document.querySelector('.table-responsive');
+                                    container.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> 您还没有上传任何文件</div>';
+                                }
+                            }, 500);
+                        }, 100);
+                    }
+                    
+                    // 显示成功消息
+                    const messageContainer = document.createElement('div');
+                    messageContainer.className = 'toast show align-items-center text-white bg-success border-0';
+                    messageContainer.setAttribute('role', 'alert');
+                    messageContainer.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                文件已成功删除
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="关闭"></button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('flash-messages-container').appendChild(messageContainer);
+                })
+                .catch(error => {
+                    // 显示错误消息
+                    const messageContainer = document.createElement('div');
+                    messageContainer.className = 'toast show align-items-center text-white bg-danger border-0';
+                    messageContainer.setAttribute('role', 'alert');
+                    messageContainer.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${error.message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="关闭"></button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('flash-messages-container').appendChild(messageContainer);
+                });
+            }
+        }
+    });
+    
+    // 移除重复的toast处理代码
+});
+</script>
+{% endblock %}

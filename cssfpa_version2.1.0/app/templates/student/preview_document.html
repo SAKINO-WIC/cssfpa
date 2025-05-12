@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}预览文档 - {{ file.original_filename }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    #doc-viewer {
+        width: 100%;
+        height: 75vh;
+        border: 1px solid #ddd;
+        margin-top: 15px;
+    }
+    .container {
+        max-width: 95%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">预览文档: {{ file.original_filename }}</h5>
+            <div>
+                <a href="{{ url_for('student.download_file', file_id=file.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-download"></i> 下载
+                </a>
+                <a href="{{ url_for('student.my_files') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="file-metadata mb-3">
+                <span class="badge bg-info">{{ file.file_type }}</span>
+                <span class="badge bg-secondary">{{ (file.file_size / 1024)|round(2) }} KB</span>
+                <span class="badge bg-dark">{{ file.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+            <div class="file-description mb-3">
+                <h6>文件说明:</h6>
+                <p>{{ file.description or '无说明' }}</p>
+            </div>
+            <div class="doc-container">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 系统正在尝试使用Google Docs Viewer预览此文档。如果无法正常显示，请下载文件在本地查看。
+                </div>
+                {% set file_url = url_for('student.preview_file_content', file_id=file.id, _external=True) %}
+                <iframe id="doc-viewer" 
+                        src="https://docs.google.com/viewer?url={{ file_url|urlencode }}&embedded=true" 
+                        frameborder="0">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // 检测预览加载失败的情况
+    document.getElementById('doc-viewer').onload = function() {
+        try {
+            // 尝试检测iframe加载内容
+            setTimeout(function() {
+                var iframeDoc = document.getElementById('doc-viewer').contentDocument || 
+                                document.getElementById('doc-viewer').contentWindow.document;
+                
+                // 如果iframe内容非常小，可能表示预览失败
+                if (iframeDoc.body.innerHTML.length < 100) {
+                    document.querySelector('.doc-container').innerHTML += `
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            预览加载失败。请<a href="{{ url_for('student.download_file', file_id=file.id) }}" class="alert-link">下载文件</a>在本地查看。
+                        </div>
+                    `;
+                }
+            }, 5000); // 给预览5秒钟的加载时间
+        } catch (e) {
+            console.error("无法检测预览状态:", e);
+        }
+    };
+</script>
+{% endblock %} 

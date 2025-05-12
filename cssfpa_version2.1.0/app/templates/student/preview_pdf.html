@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}预览PDF - {{ file.original_filename }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    #pdf-viewer {
+        width: 100%;
+        height: 75vh;
+        border: 1px solid #ddd;
+        margin-top: 15px;
+    }
+    .container {
+        max-width: 95%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">预览PDF: {{ file.original_filename }}</h5>
+            <div>
+                <a href="{{ url_for('student.download_file', file_id=file.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-download"></i> 下载
+                </a>
+                <a href="{{ url_for('student.my_files') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="file-metadata mb-3">
+                <span class="badge bg-info">{{ file.file_type }}</span>
+                <span class="badge bg-secondary">{{ (file.file_size / 1024)|round(2) }} KB</span>
+                <span class="badge bg-dark">{{ file.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+            <div class="file-description mb-3">
+                <h6>文件说明:</h6>
+                <p>{{ file.description or '无说明' }}</p>
+            </div>
+            <div class="pdf-container">
+                <iframe id="pdf-viewer" 
+                        src="{{ url_for('student.preview_file_content', file_id=file.id) }}" 
+                        title="{{ file.original_filename }}">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

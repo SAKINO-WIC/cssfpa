@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}评分配置 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 d-flex glass-sidebar p-0">
+            <div class="sidebar-content w-100">
+                <div class="sidebar-header text-center py-4">
+                    <h2 class="navbar-title text-white mb-0">评分系统</h2>
+                </div>
+                <div class="sidebar-user text-center">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-2">
+                        <span>{{ current_user.username[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+                    <small class="text-white-50">教师</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.index') }}" class="sidebar-link">
+                            <i class="fas fa-user-graduate me-2"></i>学生管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item active">
+                        <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link active">
+                            <i class="fas fa-cog me-2"></i>评分配置
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link">
+                            <i class="fas fa-calculator me-2"></i>批量评分
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.reports') }}" class="sidebar-link">
+                            <i class="fas fa-chart-bar me-2"></i>数据统计
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                            <i class="fas fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                            <i class="fas fa-sign-out-alt me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <main class="col-md-10 main-content">
+            <!-- 移动端菜单按钮 -->
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-primary sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+                
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">评分配置管理</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#configModal">
+                        <i class="fas fa-plus"></i> 添加配置
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 评分配置列表 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>配置名称</th>
+                                    <th>基础分</th>
+                                    <th>学业权重</th>
+                                    <th>创建时间</th>
+                                    <th>更新时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for config in configs %}
+                                <tr>
+                                    <td>{{ config.name }}</td>
+                                    <td>{{ config.config.base_score }}</td>
+                                    <td>{{ config.config.academic_weight * 100 }}%</td>
+                                    <td>{{ config.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ config.updated_at.strftime('%Y-%m-%d %H:%M') if config.updated_at else '-' }}</td>
+                                    <td>
+                                        {% if config.is_active %}
+                                            <span class="badge bg-success">已启用</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">未启用</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ config.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if not config.is_active %}
+                                            <form action="{{ url_for('teacher.set_active_config') }}" method="post" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="config_id" value="{{ config.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        <form action="{{ url_for('teacher.delete_score_config') }}" method="post" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="config_id" value="{{ config.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除此配置吗？');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">暂无评分配置</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 评分配置模态框 -->
+<div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="configModalLabel">添加评分配置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="configForm" method="POST" action="{{ url_for('teacher.add_score_config') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="config_id" id="config_id" value="">
+                    
+                    <h5 class="mb-3">基础设置</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">配置名称</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="is_active" class="form-label">设为活跃配置</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active">
+                                <label class="form-check-label" for="is_active">
+                                    激活此配置（将替换当前活跃配置）
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="base_score" class="form-label">基础分数</label>
+                            <input type="number" class="form-control" id="base_score" name="base_score" min="0" max="100" value="60" required>
+                            <div class="form-text">满足全部基础条件可获得的分数，否则为0分</div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">基础条件说明（所有条件必须满足）</h5>
+                    <div class="alert alert-info">
+                        <ul class="mb-0">
+                            <li>递交入党申请书</li>
+                            <li>通过党课考试</li>
+                            <li>通过班级推优</li>
+                            <li>无挂科记录</li>
+                        </ul>
+                    </div>
+
+                    <h5 class="mb-3">学业表现</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="academic_weight" class="form-label">学业表现权重</label>
+                            <input type="number" class="form-control" id="academic_weight" name="academic_weight" min="0" max="1" step="0.01" value="0.15" readonly>
+                            <div class="form-text">综合测评成绩 × 15%</div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">奖学金情况（最高10分）</h5>
+                    <div class="alert alert-info mb-3">
+                        <p class="mb-0">评分规则：国家级和校级奖学金可叠加，同类型取最高，总分不超过10分</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.national_first" class="form-label">国家一等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.national_first" name="scholarship_settings.national_first" min="0" max="10" value="8" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.national_second" class="form-label">国家二等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.national_second" name="scholarship_settings.national_second" min="0" max="10" value="6" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.national_third" class="form-label">国家三等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.national_third" name="scholarship_settings.national_third" min="0" max="10" value="4" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.school_first" class="form-label">校一等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.school_first" name="scholarship_settings.school_first" min="0" max="10" value="5" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.school_second" class="form-label">校二等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.school_second" name="scholarship_settings.school_second" min="0" max="10" value="3" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="scholarship_settings.school_third" class="form-label">校三等奖学金分数</label>
+                            <input type="number" class="form-control" id="scholarship_settings.school_third" name="scholarship_settings.school_third" min="0" max="10" value="2" required>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">志愿服务时长（最高5分）</h5>
+                    <div class="alert alert-info mb-3">
+                        <ul class="mb-0">
+                            <li>0小时：0分</li>
+                            <li>1-5小时：1分</li>
+                            <li>6-15小时：2分</li>
+                            <li>16-30小时：3分</li>
+                            <li>31-50小时：4分</li>
+                            <li>51小时以上：5分</li>
+                        </ul>
+                    </div>
+                    
+                    <h5 class="mb-3">英语能力评估（最高10分）</h5>
+                    <div class="alert alert-info mb-3">
+                        <p>必须先通过CET4才计入六级得分，四级和六级得分可叠加，最高得分为10分</p>
+                        <ul class="mb-0">
+                            <li>CET4成绩：未通过(0分)、425-450分(1分)、451-500分(2分)、501-550分(3分)、551-600分(4分)、600以上(5分)</li>
+                            <li>CET6成绩：未通过(0分)、425-450分(3分)、451-500分(5分)、501-550分(6分)、551-600分(8分)、600以上(10分)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="english_settings.cet4_pass_score" class="form-label">CET4通过分数线</label>
+                            <input type="number" class="form-control" id="english_settings.cet4_pass_score" name="english_settings.cet4_pass_score" min="0" max="710" value="425" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="english_settings.cet6_pass_score" class="form-label">CET6通过分数线</label>
+                            <input type="number" class="form-control" id="english_settings.cet6_pass_score" name="english_settings.cet6_pass_score" min="0" max="710" value="425" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>CET4分数段设置</h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">425-450分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet4_level1_points" min="0" max="10" value="1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">451-500分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet4_level2_points" min="0" max="10" value="2" required>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">501-550分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet4_level3_points" min="0" max="10" value="3" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">551-600分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet4_level4_points" min="0" max="10" value="4" required>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">600分以上</label>
+                                    <input type="number" class="form-control" name="english_settings.cet4_level5_points" min="0" max="10" value="5" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>CET6分数段设置</h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">425-450分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet6_level1_points" min="0" max="10" value="3" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">451-500分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet6_level2_points" min="0" max="10" value="5" required>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">501-550分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet6_level3_points" min="0" max="10" value="6" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">551-600分</label>
+                                    <input type="number" class="form-control" name="english_settings.cet6_level4_points" min="0" max="10" value="8" required>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">600分以上</label>
+                                    <input type="number" class="form-control" name="english_settings.cet6_level5_points" min="0" max="10" value="10" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">总分评定标准</h5>
+                    <div class="alert alert-info mb-3">
+                        <ul class="mb-0">
+                            <li>60-69分：基本合格</li>
+                            <li>70-79分：良好</li>
+                            <li>80-89分：优秀</li>
+                            <li>90分以上：特别优秀</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存配置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 调试信息 -->
+<div class="modal fade" id="debugModal" tabindex="-1" aria-labelledby="debugModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="debugModalLabel">调试信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>找到的编辑按钮数量: <span id="debugButtonCount">0</span></h6>
+                    <h6>解析的配置数量: <span id="debugConfigCount">0</span></h6>
+                </div>
+                <div class="mb-3">
+                    <h6>配置数据预览:</h6>
+                    <pre id="debugConfigData" style="max-height: 300px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 隐藏的配置数据元素 -->
+<div id="configData" data-configs="{{ configs_json|safe }}" style="display: none;"></div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #c91c23;
+        --secondary-color: #6f42c1;
+        --success-color: #1cc88a;
+        --info-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --light-color: #f8f9fc;
+        --dark-color: #5a5c69;
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+    }
+    
+    /* 主内容区样式 */
+    .main-content {
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    /* 侧边栏 */
+    .glass-sidebar {
+        background-color: #c91c23;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        overflow-y: auto;
+    }
+    
+    .sidebar-content {
+        padding-bottom: 40px;
+    }
+    
+    .sidebar-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-title {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+    }
+    
+    .sidebar-user {
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .sidebar-nav {
+        padding: 15px;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-item.active .sidebar-link {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 12px 15px;
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    /* 适应性修复 */
+    @media (max-width: 992px) {
+        .glass-sidebar {
+            position: fixed;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            height: 100%;
+            z-index: 1000;
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 移动端侧边栏切换
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.glass-sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击主内容区域时关闭侧边栏
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.addEventListener('click', function(e) {
+                    if (window.innerWidth < 992 && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+        }
+        
+        // 添加调试按钮
+        const pageTitle = document.querySelector('.h2');
+        if (pageTitle) {
+            const debugBtn = document.createElement('button');
+            debugBtn.className = 'btn btn-sm btn-outline-info ms-2';
+            debugBtn.innerHTML = '<i class="fas fa-bug"></i> 诊断';
+            debugBtn.addEventListener('click', function() {
+                showDebugInfo();
+            });
+            pageTitle.appendChild(debugBtn);
+        }
+        
+        // 显示调试信息
+        function showDebugInfo() {
+            const debugModal = new bootstrap.Modal(document.getElementById('debugModal'));
+            const editButtons = document.querySelectorAll('.edit-btn');
+            document.getElementById('debugButtonCount').textContent = editButtons.length;
+            
+            let configsData = [];
+            try {
+                const configDataElem = document.getElementById('configData');
+                if (configDataElem && configDataElem.dataset.configs) {
+                    configsData = JSON.parse(configDataElem.dataset.configs);
+                    document.getElementById('debugConfigCount').textContent = configsData.length;
+                    document.getElementById('debugConfigData').textContent = JSON.stringify(configsData, null, 2);
+                } else {
+                    document.getElementById('debugConfigData').textContent = "配置数据元素不存在或没有数据";
+                }
+            } catch (e) {
+                document.getElementById('debugConfigData').textContent = "解析配置数据失败: " + e.message;
+            }
+            
+            debugModal.show();
+        }
+        
+        // 配置编辑功能
+        const editButtons = document.querySelectorAll('.edit-btn');
+        console.log("找到编辑按钮:", editButtons.length);
+        
+        // 获取配置数据
+        let configsData = [];
+        try {
+            const configDataElem = document.getElementById('configData');
+            if (configDataElem && configDataElem.dataset.configs) {
+                configsData = JSON.parse(configDataElem.dataset.configs);
+                console.log("成功解析配置数据:", configsData);
+            } else {
+                console.error("配置数据元素不存在或没有数据");
+            }
+        } catch (e) {
+            console.error("解析配置数据失败:", e);
+        }
+        
+        const configForm = document.getElementById('configForm');
+        const configModalTitle = document.getElementById('configModalLabel');
+        const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const configId = this.dataset.id;
+                console.log("点击编辑按钮, ID:", configId);
+                
+                const config = configsData.find(c => c.id == configId);
+                
+                if (config) {
+                    console.log("找到配置:", config);
+                    // 设置表单标题和ID
+                    configModalTitle.textContent = '编辑评分配置';
+                    document.getElementById('config_id').value = config.id;
+                    
+                    // 填充基础设置
+                    document.getElementById('name').value = config.name;
+                    document.getElementById('is_active').checked = config.is_active;
+                    
+                    // 从配置对象中提取需要的数据
+                    const configData = config.config || {};
+                    document.getElementById('base_score').value = configData.base_score || 60;
+                    document.getElementById('academic_weight').value = configData.academic_weight || 0.15;
+                    
+                    // 奖学金设置
+                    if (configData.scholarship_settings) {
+                        const scholarship = configData.scholarship_settings;
+                        document.getElementById('scholarship_settings.national_first').value = scholarship.national_first || 8;
+                        document.getElementById('scholarship_settings.national_second').value = scholarship.national_second || 6;
+                        document.getElementById('scholarship_settings.national_third').value = scholarship.national_third || 4;
+                        document.getElementById('scholarship_settings.school_first').value = scholarship.school_first || 5;
+                        document.getElementById('scholarship_settings.school_second').value = scholarship.school_second || 3;
+                        document.getElementById('scholarship_settings.school_third').value = scholarship.school_third || 2;
+                    }
+                    
+                    // 英语设置
+                    if (configData.english_settings) {
+                        const english = configData.english_settings;
+                        document.getElementById('english_settings.cet4_pass_score').value = english.cet4_pass_score || 425;
+                        document.getElementById('english_settings.cet6_pass_score').value = english.cet6_pass_score || 425;
+                        
+                        // CET4分数段
+                        const cet4_level1 = document.querySelector('[name="english_settings.cet4_level1_points"]');
+                        if (cet4_level1) cet4_level1.value = english.cet4_level1_points || 1;
+                        
+                        const cet4_level2 = document.querySelector('[name="english_settings.cet4_level2_points"]');
+                        if (cet4_level2) cet4_level2.value = english.cet4_level2_points || 2;
+                        
+                        const cet4_level3 = document.querySelector('[name="english_settings.cet4_level3_points"]');
+                        if (cet4_level3) cet4_level3.value = english.cet4_level3_points || 3;
+                        
+                        const cet4_level4 = document.querySelector('[name="english_settings.cet4_level4_points"]');
+                        if (cet4_level4) cet4_level4.value = english.cet4_level4_points || 4;
+                        
+                        const cet4_level5 = document.querySelector('[name="english_settings.cet4_level5_points"]');
+                        if (cet4_level5) cet4_level5.value = english.cet4_level5_points || 5;
+                        
+                        // CET6分数段
+                        const cet6_level1 = document.querySelector('[name="english_settings.cet6_level1_points"]');
+                        if (cet6_level1) cet6_level1.value = english.cet6_level1_points || 3;
+                        
+                        const cet6_level2 = document.querySelector('[name="english_settings.cet6_level2_points"]');
+                        if (cet6_level2) cet6_level2.value = english.cet6_level2_points || 5;
+                        
+                        const cet6_level3 = document.querySelector('[name="english_settings.cet6_level3_points"]');
+                        if (cet6_level3) cet6_level3.value = english.cet6_level3_points || 6;
+                        
+                        const cet6_level4 = document.querySelector('[name="english_settings.cet6_level4_points"]');
+                        if (cet6_level4) cet6_level4.value = english.cet6_level4_points || 8;
+                        
+                        const cet6_level5 = document.querySelector('[name="english_settings.cet6_level5_points"]');
+                        if (cet6_level5) cet6_level5.value = english.cet6_level5_points || 10;
+                    }
+                    
+                    // 改变表单提交地址
+                    configForm.action = "{{ url_for('teacher.update_score_config') }}";
+                    
+                    // 显示模态框
+                    configModal.show();
+                } else {
+                    console.error("未找到ID为", configId, "的配置");
+                }
+            });
+        });
+        
+        // 重置添加配置表单
+        document.getElementById('configModal').addEventListener('hidden.bs.modal', function() {
+            configForm.reset();
+            configModalTitle.textContent = '添加评分配置';
+            document.getElementById('config_id').value = '';
+            configForm.action = "{{ url_for('teacher.add_score_config') }}";
+        });
+    });
+</script>
+{% endblock %} 

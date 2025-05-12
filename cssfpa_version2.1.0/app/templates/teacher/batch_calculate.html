@@ -1,0 +1,2716 @@
+{% extends "base.html" %}
+
+{% block title %}批量评分 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 d-flex glass-sidebar p-0">
+            <div class="sidebar-content w-100">
+                <div class="sidebar-header text-center py-4">
+                    <h2 class="navbar-title text-white mb-0">评分系统</h2>
+                </div>
+                <div class="sidebar-user text-center">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-2">
+                        <span>{{ current_user.username[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+                    <small class="text-white-50">教师</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.index') }}" class="sidebar-link">
+                            <i class="fas fa-user-graduate me-2"></i>学生管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link">
+                            <i class="fas fa-cog me-2"></i>评分配置
+                        </a>
+                    </div>
+                    <div class="sidebar-item active">
+                        <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link active">
+                            <i class="fas fa-calculator me-2"></i>批量评分
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.reports') }}" class="sidebar-link">
+                            <i class="fas fa-chart-bar me-2"></i>数据统计
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                            <i class="fas fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                            <i class="fas fa-sign-out-alt me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 main-content">
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-danger sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">批量评分</h1>
+                
+                <!-- 显示/隐藏评分标准按钮 -->
+                <div>
+                    <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#scoringStandards" aria-expanded="false" aria-controls="scoringStandards">
+                        <i class="fas fa-info-circle"></i> 查看评分标准
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 评分标准说明 (默认折叠) -->
+            <div class="collapse mb-4" id="scoringStandards">
+                <div class="card">
+                    <div class="card-header bg-party-red text-white">
+                        <h5 class="mb-0">入党积极分子综合评分标准（百分制）</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">一、基础条件评估（满足全部条件得60分，否则0分）</h6>
+                                    <ul class="mb-3">
+                                        <li>递交入党申请书</li>
+                                        <li>通过党课考试</li>
+                                        <li>通过班级推优</li>
+                                        <li>无挂科记录</li>
+                                    </ul>
+                                    <div class="alert alert-warning py-2">
+                                        <small><strong>重要说明</strong>：以上所有条件必须全部满足才能获得基础分，任一条件不满足，总分将为0分且评定为不合格。</small>
+                                    </div>
+                                    
+                                    <h6 class="fw-bold">二、学业表现（15分）</h6>
+                                    <ul class="mb-3">
+                                        <li>综合测评成绩 × 15%</li>
+                                        <li>例：综测成绩94分 → 得14.1分</li>
+                                    </ul>
+                                    
+                                    <h6 class="fw-bold">三、奖学金情况（10分）</h6>
+                                    <ul>
+                                        <li>校级奖学金：三等(2分)、二等(3分)、一等(5分)</li>
+                                        <li>国家级奖学金：三等(4分)、二等(6分)、一等(8分)</li>
+                                        <li>评分规则：国家级和校级奖学金可叠加，同类型取最高，总分不超过10分</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">四、志愿服务时长（5分）</h6>
+                                    <ul class="mb-3">
+                                        <li>0小时：0分</li>
+                                        <li>1-5小时：1分</li>
+                                        <li>6-15小时：2分</li>
+                                        <li>16-30小时：3分</li>
+                                        <li>31-50小时：4分</li>
+                                        <li>51小时以上：5分</li>
+                                    </ul>
+                                    
+                                    <h6 class="fw-bold">五、英语能力评估（10分）</h6>
+                                    <ul class="mb-3">
+                                        <li>CET4成绩：未通过(0分)、425-450分(1分)、451-500分(2分)、501-550分(3分)、551-600分(4分)、600以上(5分)</li>
+                                        <li>CET6成绩：未通过(0分)、425-450分(3分)、451-500分(5分)、501-550分(6分)、551-600分(8分)、600以上(10分)</li>
+                                        <li>必须先通过CET4才计入六级得分，四级和六级得分可叠加，最高得分为10分</li>
+                                    </ul>
+                                    
+                                    <h6 class="fw-bold">总分评定标准</h6>
+                                    <ul>
+                                        <li>60-69分：基本合格</li>
+                                        <li>70-79分：良好</li>
+                                        <li>80-89分：优秀</li>
+                                        <li>90分以上：特别优秀</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 学生筛选与评分卡片 -->
+            <div class="card mb-4">
+                <div class="card-header bg-party-red text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">批量评分计算</h5>
+                    <div>
+                        <button class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#configInfo">
+                            <i class="fas fa-info-circle"></i> 评分配置信息
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- 评分配置信息（默认折叠） -->
+                    <div class="collapse mb-3" id="configInfo">
+                        {% if current_config.is_active %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> 当前使用的评分配置: <strong>{{ current_config.name }}</strong>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle"></i> 警告：使用的配置 <strong>{{ current_config.name }}</strong> 不是当前活跃配置。
+                            <a href="{{ url_for('teacher.score_configs') }}" class="alert-link">点击这里</a> 管理评分配置。
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 筛选表单 -->
+                    <form method="GET" action="{{ url_for('teacher.batch_calculate') }}" class="mb-4" id="filterForm">
+                        <!-- 计算参数在点击计算评分按钮时由JS添加 -->
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="department" class="form-label">学院</label>
+                                <select class="form-select" id="department" name="department">
+                                    <option value="">全部学院</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="class_name" class="form-label">班级</label>
+                                <select class="form-select" id="class_name" name="class_name">
+                                    <option value="">全部班级</option>
+                                    {% for class_name in class_names %}
+                                    <option value="{{ class_name }}" {% if request.args.get('class_name') == class_name %}selected{% endif %}>{{ class_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="political_status" class="form-label">政治面貌</label>
+                                <select class="form-select" id="political_status" name="political_status">
+                                    <option value="">全部</option>
+                                    <option value="共青团员" {% if request.args.get('political_status') == '共青团员' %}selected{% endif %}>共青团员</option>
+                                    <option value="群众" {% if request.args.get('political_status') == '群众' %}selected{% endif %}>群众</option>
+                                    <option value="入党积极分子" {% if request.args.get('political_status') == '入党积极分子' %}selected{% endif %}>入党积极分子</option>
+                                    <option value="预备党员" {% if request.args.get('political_status') == '预备党员' %}selected{% endif %}>预备党员</option>
+                                    <option value="党员" {% if request.args.get('political_status') == '党员' %}selected{% endif %}>党员</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="config_id" class="form-label">评分标准</label>
+                                <select class="form-select" id="config_id" name="config_id">
+                                    {% for config in configs %}
+                                    <option value="{{ config.id }}" {% if config.id|string == request.args.get('config_id', current_config.id|string) %}selected{% endif %}>
+                                        {{ config.name }}{% if config.is_active %} (当前){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-12 d-flex justify-content-between">
+                                <a href="{{ url_for('teacher.check_student_info') }}" class="btn btn-info">
+                                    <i class="fas fa-clipboard-check"></i> 检查学生信息完整性
+                                </a>
+                                
+                                <div>
+                                    <button type="button" class="btn btn-secondary me-2" onclick="document.querySelectorAll('#department, #class_name, #political_status').forEach(el => el.value = ''); this.form.submit();">
+                                        <i class="fas fa-undo"></i> 重置筛选
+                                    </button>
+                                    <button type="submit" class="btn btn-outline-danger me-2">
+                                        <i class="fas fa-filter"></i> 筛选学生
+                                    </button>
+                                    <button type="button" class="btn btn-danger" id="calculateBtn" onclick="calculateScores()" disabled>
+                                        <i class="fas fa-calculator"></i> 计算评分
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- 评分所需数据检查 -->
+                    {% with messages = get_flashed_messages(category_filter=["danger"]) %}
+                    {% if messages %}
+                    <div class="alert alert-danger">
+                        {% for message in messages %}
+                        <p><i class="fas fa-exclamation-triangle"></i> {{ message }}</p>
+                        {% endfor %}
+                        <div class="mt-2">
+                            <a href="{{ url_for('teacher.check_student_info') }}" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-clipboard-check"></i> 检查学生信息完整性
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <!-- 学生批量评分表单 -->
+                    <form id="batchScoreForm" action="{{ url_for('teacher.batch_calculate', class_config_id=current_config.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div id="selectedStudentsContainer"></div>
+                        <input type="hidden" id="calculateParam" name="calculate" value="0">
+                        <input type="hidden" id="saveParam" name="save" value="0">
+                        <input type="hidden" id="batchCalculate" name="batch_calculate" value="1">
+                        
+                        <!-- 学生列表 -->
+                        {% if students %}
+                        <div class="mb-3 d-flex justify-content-between">
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllStudents" onchange="
+                                        var checkboxes = document.querySelectorAll('.student-checkbox');
+                                        var selectedCount = document.getElementById('selectedCount');
+                                        var saveScoresBtn = document.getElementById('saveScoresBtn');
+                                        var calculateBtn = document.getElementById('calculateBtn');
+                                        
+                                        checkboxes.forEach(cb => {
+                                            cb.checked = this.checked;
+                                        });
+                                        
+                                        var checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
+                                        if (selectedCount) selectedCount.textContent = checkedCount;
+                                        
+                                        if (saveScoresBtn) saveScoresBtn.disabled = checkedCount === 0;
+                                        if (calculateBtn) calculateBtn.disabled = checkedCount === 0;
+                                    ">
+                                    <label class="form-check-label" for="selectAllStudents">
+                                        全选 (已选择 <span id="selectedCount">0</span> 名学生)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分页控件 - 移到表格上方 -->
+                        <div class="d-flex justify-content-between align-items-center mb-3" id="pagination-container-top">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">每页显示:</span>
+                                <select class="form-select form-select-sm d-inline-block" id="pageSizeSelector" style="width: 120px;">
+                                    <option value="10">10条/页</option>
+                                    <option value="20" selected>20条/页</option>
+                                    <option value="50">50条/页</option>
+                                    <option value="100">100条/页</option>
+                                    <option value="200">200条/页</option>
+                                </select>
+                                <span class="ms-3">显示 <span id="startItem">1</span>-<span id="endItem">{{ students|length if students|length < 20 else 20 }}</span> 项，共 <span id="totalItems">{{ students|length }}</span> 项</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <nav aria-label="学生列表分页">
+                                    <ul class="pagination pagination-sm" id="pagination">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="上一页" id="prevPage">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#" data-page="1">1</a></li>
+                                        <!-- 此处的分页链接会由JavaScript动态生成 -->
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="下一页" id="nextPage">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                <div class="ms-2 d-flex align-items-center">
+                                    <input type="number" min="1" id="pageJumpInput" class="form-control form-control-sm mx-2" style="width: 100px;" placeholder="页码">
+                                    <button type="button" id="pageJumpBtn" class="btn btn-sm btn-danger">跳转</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 学生评分结果表格 -->
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 3%;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" disabled style="visibility: hidden;">
+                                            </div>
+                                        </th>
+                                        <th class="text-center" style="width: 10%;">学号</th>
+                                        <th class="text-center" style="width: 7%;">姓名</th>
+                                        <th class="text-center" style="width: 8%;">班级</th>
+                                        <th class="text-center" style="width: 8%;">基础分<br><small class="text-muted">(60分)</small></th>
+                                        <th class="text-center" style="width: 8%;">学业分<br><small class="text-muted">(15分)</small></th>
+                                        <th class="text-center" style="width: 8%;">奖学金分<br><small class="text-muted">(10分)</small></th>
+                                        <th class="text-center" style="width: 8%;">志愿服务分<br><small class="text-muted">(5分)</small></th>
+                                        <th class="text-center" style="width: 8%;">英语能力分<br><small class="text-muted">(10分)</small></th>
+                                        <th class="text-center" style="width: 16%;">总分<br><small class="text-muted">(100分)</small></th>
+                                        <th class="text-center" style="width: 10%; min-width: 180px; z-index: 1030;">
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-danger dropdown-toggle" id="gradeFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 150px; padding: 0.25rem 0.5rem;">
+                                                    等级
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" style="z-index: 1050; min-width: 220px;" aria-labelledby="gradeFilterDropdown">
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('all')">全部</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('A++')">特别优秀(A++)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('A+')">特别优秀(A+)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('A')">优秀(A)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('A-')">优秀(A-)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('B+')">良好(B+)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('B')">良好(B)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('C+')">基本合格(C+)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('C')">基本合格(C)</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="filterStudentsByGrade('F')">不合格(F)</a></li>
+                                                </ul>
+                                            </div>
+                                        </th>
+                                        <th class="text-center" style="width: 8%;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentListBody">
+                                    {% for student in students %}
+                                    {% set base_score = 60 if student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course else 0 %}
+                                    
+                                    {# 计算学业成绩分 #}
+                                    {% set academic_score = (student.comprehensive_test_score or 0) * 0.15 if student.comprehensive_test_score is not none else 0 %}
+                                    
+                                    {# 计算奖学金分 #}
+                                    {% set scholarship_score = 0 %}
+                                    {% set national_score = 0 %}
+                                    {% set school_score = 0 %}
+                                    
+                                    {# 解析奖学金文本信息 #}
+                                    {% if student.scholarship %}
+                                        {# 检查国家级奖学金 #}
+                                        {% if '国家一等奖' in student.scholarship or '国家一等奖学金' in student.scholarship %}
+                                            {% set national_score = 8 %}
+                                        {% elif '国家二等奖' in student.scholarship or '国家二等奖学金' in student.scholarship %}
+                                            {% set national_score = 6 %}
+                                        {% elif '国家三等奖' in student.scholarship or '国家三等奖学金' in student.scholarship %}
+                                            {% set national_score = 4 %}
+                                        {% endif %}
+                                        
+                                        {# 检查校级奖学金 #}
+                                        {% if '校级一等奖' in student.scholarship or '校级一等奖学金' in student.scholarship or '学校一等奖' in student.scholarship or '学校一等奖学金' in student.scholarship %}
+                                            {% set school_score = 5 %}
+                                        {% elif '校级二等奖' in student.scholarship or '校级二等奖学金' in student.scholarship or '学校二等奖' in student.scholarship or '学校二等奖学金' in student.scholarship %}
+                                            {% set school_score = 3 %}
+                                        {% elif '校级三等奖' in student.scholarship or '校级三等奖学金' in student.scholarship or '学校三等奖' in student.scholarship or '学校三等奖学金' in student.scholarship %}
+                                            {% set school_score = 2 %}
+                                        {% endif %}
+                                        
+                                        {# 同时处理简化的格式 #}
+                                        {% if '国一' in student.scholarship %}
+                                            {% set national_score = 8 %}
+                                        {% elif '国二' in student.scholarship %}
+                                            {% set national_score = 6 %}
+                                        {% elif '国三' in student.scholarship %}
+                                            {% set national_score = 4 %}
+                                        {% endif %}
+                                        
+                                        {% if '校一' in student.scholarship %}
+                                            {% set school_score = 5 %}
+                                        {% elif '校二' in student.scholarship %}
+                                            {% set school_score = 3 %}
+                                        {% elif '校三' in student.scholarship %}
+                                            {% set school_score = 2 %}
+                                        {% endif %}
+                                        
+                                        {# 计算最终奖学金分数 - 国家级和校级奖学金可叠加 #}
+                                        {% set scholarship_score = national_score + school_score %}
+                                        
+                                        {# 确保奖学金得分不超过10分 #}
+                                        {% if scholarship_score > 10 %}
+                                            {% set scholarship_score = 10 %}
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {# 计算志愿服务分 #}
+                                    {% set volunteer_score = 0 %}
+                                    {% set volunteer_hours = student.volunteer_hours or 0 %}
+                                    {% if volunteer_hours > 50 %}
+                                        {% set volunteer_score = 5 %}
+                                    {% elif volunteer_hours > 30 %}
+                                        {% set volunteer_score = 4 %}
+                                    {% elif volunteer_hours > 15 %}
+                                        {% set volunteer_score = 3 %}
+                                    {% elif volunteer_hours > 5 %}
+                                        {% set volunteer_score = 2 %}
+                                    {% elif volunteer_hours > 0 %}
+                                        {% set volunteer_score = 1 %}
+                                    {% endif %}
+                                    
+                                    {# 计算英语能力分 #}
+                                    {% set english_score = 0 %}
+                                    {% set cet4_score = student.cet4_score or 0 %}
+                                    {% set cet6_score = student.cet6_score or 0 %}
+                                    
+                                    {# CET4得分 #}
+                                    {% if cet4_score >= 600 %}
+                                        {% set english_score = english_score + 5 %}
+                                    {% elif cet4_score >= 551 %}
+                                        {% set english_score = english_score + 4 %}
+                                    {% elif cet4_score >= 501 %}
+                                        {% set english_score = english_score + 3 %}
+                                    {% elif cet4_score >= 451 %}
+                                        {% set english_score = english_score + 2 %}
+                                    {% elif cet4_score >= 425 %}
+                                        {% set english_score = english_score + 1 %}
+                                    {% endif %}
+                                    
+                                    {# 如果通过CET4，才计算CET6得分 #}
+                                    {% if cet4_score >= 425 and cet6_score > 0 %}
+                                        {% if cet6_score >= 600 %}
+                                            {% set english_score = english_score + 10 %}
+                                        {% elif cet6_score >= 551 %}
+                                            {% set english_score = english_score + 8 %}
+                                        {% elif cet6_score >= 501 %}
+                                            {% set english_score = english_score + 6 %}
+                                        {% elif cet6_score >= 451 %}
+                                            {% set english_score = english_score + 5 %}
+                                        {% elif cet6_score >= 425 %}
+                                            {% set english_score = english_score + 3 %}
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {# 确保英语得分不超过10分 #}
+                                    {% if english_score > 10 %}
+                                        {% set english_score = 10 %}
+                                    {% endif %}
+                                    
+                                    {# 计算总分 - 如果基础条件不满足则总分为0 #}
+                                    {% set total_score = base_score %}
+                                    {% if base_score > 0 %}
+                                        {% set total_score = base_score + academic_score + scholarship_score + volunteer_score + english_score %}
+                                    {% endif %}
+                                    
+                                    <tr class="student-row" 
+                                        style="{% if not student.has_application or not student.passed_exam or not student.class_approved or student.has_failed_course %}background-color:#ff8080{% elif total_score >= 95 %}background-color:#dda0ff{% elif total_score >= 90 %}background-color:#a0ffa0{% elif total_score >= 85 %}background-color:#ffa0d0{% elif total_score >= 80 %}background-color:#ffb380{% elif total_score >= 75 %}background-color:#ffda80{% elif total_score >= 70 %}background-color:#ffff80{% elif total_score >= 65 %}background-color:#80c0ff{% elif total_score >= 60 %}background-color:#80e5ff{% endif %}"
+                                        data-student-id="{{ student.student_id }}">
+                                        <td class="text-center">
+                                            <input type="checkbox" name="student_ids" value="{{ student.student_id }}" class="student-checkbox" onclick="
+                                                // 内联更新选中计数函数
+                                                var selectedCount = document.getElementById('selectedCount');
+                                                var saveScoresBtn = document.getElementById('saveScoresBtn');
+                                                var calculateBtn = document.getElementById('calculateBtn');
+                                                
+                                                var checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
+                                                if (selectedCount) selectedCount.textContent = checkedCount;
+                                                
+                                                // 更新全选复选框状态
+                                                var selectAllCheckbox = document.getElementById('selectAllStudents');
+                                                var allCheckboxes = document.querySelectorAll('.student-checkbox');
+                                                selectAllCheckbox.checked = checkedCount > 0 && checkedCount === allCheckboxes.length;
+                                                
+                                                // 更新按钮状态
+                                                if (saveScoresBtn) saveScoresBtn.disabled = checkedCount === 0;
+                                                if (calculateBtn) calculateBtn.disabled = checkedCount === 0;
+                                            ">
+                                        </td>
+                                        <td class="text-center">{{ student.student_id }}</td>
+                                        <td class="text-center">{{ student.name }}</td>
+                                        <td class="text-center">{{ student.class_name }}</td>
+                                        <td class="text-center">
+                                            {{ base_score|round(1) }}
+                                        </td>
+                                        <td class="text-center">{{ academic_score|round(1) }}</td>
+                                        <td class="text-center">
+                                            {% if scholarship_score > 0 %}
+                                            <strong>{{ scholarship_score|round(1) }}</strong>
+                                            {% if student.scholarship %}
+                                            <div class="small text-danger" style="font-size: 0.8em; white-space: nowrap;">{{ student.scholarship|truncate(20, true) }}</div>
+                                            {% endif %}
+                                            {% else %}
+                                            <strong>0</strong>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ volunteer_score|round(1) }}</td>
+                                        <td class="text-center">{{ english_score|round(1) }}</td>
+                                        <td class="text-center font-weight-bold" style="white-space: nowrap;">
+                                            {{ total_score|round(1) }}
+                                            {% if total_score == 0 %}
+                                            <div class="text-danger small" style="white-space: nowrap;">(基础条件未满足)</div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if not student.has_application or not student.passed_exam or not student.class_approved or student.has_failed_course %}
+                                            <span class="badge" style="background-color:#ff4d4d!important;color:white;font-weight:bold">不合格</span>
+                                            {% elif total_score >= 95 %}
+                                            <span class="badge" style="background-color:#9933cc!important;color:white;font-weight:bold">特别优秀(A++)</span>
+                                            {% elif total_score >= 90 %}
+                                            <span class="badge" style="background-color:#33cc33!important;color:white;font-weight:bold">特别优秀(A+)</span>
+                                            {% elif total_score >= 85 %}
+                                            <span class="badge" style="background-color:#ff3399!important;color:white;font-weight:bold">优秀(A)</span>
+                                            {% elif total_score >= 80 %}
+                                            <span class="badge" style="background-color:#ff9933!important;color:white;font-weight:bold">优秀(A-)</span>
+                                            {% elif total_score >= 75 %}
+                                            <span class="badge" style="background-color:#ffcc00!important;color:black;font-weight:bold">良好(B+)</span>
+                                            {% elif total_score >= 70 %}
+                                            <span class="badge" style="background-color:#ffff33!important;color:black;font-weight:bold">良好(B)</span>
+                                            {% elif total_score >= 65 %}
+                                            <span class="badge" style="background-color:#3399ff!important;color:white;font-weight:bold">基本合格(C+)</span>
+                                            {% elif total_score >= 60 %}
+                                            <span class="badge" style="background-color:#00ccff!important;color:white;font-weight:bold">基本合格(C)</span>
+                                            {% else %}
+                                            <span class="badge" style="background-color:#ff4d4d!important;color:white;font-weight:bold">不合格</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-info detail-btn" data-student-id="{{ student.student_id }}">
+                                                <i class="fas fa-info-circle"></i> 详情
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="detail-row" id="detail-{{ student.student_id }}" style="display: none;">
+                                        <td colspan="12">
+                                            <div class="detail-content p-3">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="card shadow-sm mb-3" style="height: 100%;">
+                                                            <div class="card-header bg-light">
+                                                                <h5 class="card-title mb-0">基础条件</h5>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table table-sm">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td width="30%">递交入党申请书</td>
+                                                                            <td width="50%">
+                                                                                {% if student.has_application %}是{% else %}否{% endif %}
+                                                                            </td>
+                                                                            <td width="20%">
+                                                                                {% if student.has_application %}
+                                                                                <span class="badge badge-success">通过</span>
+                                                                                {% else %}
+                                                                                <span class="badge badge-danger">未通过</span>
+                                                                                {% endif %}
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>通过党课考试</td>
+                                                                            <td>
+                                                                                {% if student.passed_exam %}是{% else %}否{% endif %}
+                                                                            </td>
+                                                                            <td>
+                                                                                {% if student.passed_exam %}
+                                                                                <span class="badge badge-success">通过</span>
+                                                                                {% else %}
+                                                                                <span class="badge badge-danger">未通过</span>
+                                                                                {% endif %}
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>通过班级推优</td>
+                                                                            <td>
+                                                                                {% if student.class_approved %}是{% else %}否{% endif %}
+                                                                            </td>
+                                                                            <td>
+                                                                                {% if student.class_approved %}
+                                                                                <span class="badge badge-success">通过</span>
+                                                                                {% else %}
+                                                                                <span class="badge badge-danger">未通过</span>
+                                                                                {% endif %}
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>无挂科记录</td>
+                                                                            <td>
+                                                                                {% if not student.has_failed_course %}是{% else %}否{% endif %}
+                                                                            </td>
+                                                                            <td>
+                                                                                {% if not student.has_failed_course %}
+                                                                                <span class="badge badge-success">通过</span>
+                                                                                {% else %}
+                                                                                <span class="badge badge-danger">未通过</span>
+                                                                                {% endif %}
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <div class="alert {% if student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course %}alert-success{% else %}alert-danger{% endif %} mt-2">
+                                                                     <strong>基础条件状态:</strong>
+                                                                     {% if student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course %}
+                                                                     所有基础条件已满足，获得基础分60分
+                                                                     {% else %}
+                                                                     基础条件未全部满足，基础分为0分
+                                                                     {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="card shadow-sm mb-3" style="height: 100%;">
+                                                            <div class="card-header bg-light">
+                                                                <h5 class="card-title mb-0">加分项</h5>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table table-sm">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td width="30%">学业成绩加分</td>
+                                                                            <td width="50%">综测成绩: {{ student.comprehensive_test_score or '未设置' }}</td>
+                                                                            <td width="20%">+{{ academic_score|round(1) }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>奖学金加分</td>
+                                                                            <td>
+                                                                                {% if student.scholarship %}
+                                                                                    {{ student.scholarship|truncate(40, true) }}
+                                                                                {% endif %}
+                                                                            </td>
+                                                                            <td>+{{ scholarship_score|round(1) }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>志愿服务加分</td>
+                                                                            <td>服务时长: {{ student.volunteer_hours or 0 }} 小时</td>
+                                                                            <td>+{{ volunteer_score|round(1) }}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>英语能力加分</td>
+                                                                            <td>
+                                                                                CET4: {{ student.cet4_score or '未通过' }}
+                                                                                {% if student.cet4_score and student.cet4_score >= 425 and student.cet6_score %}
+                                                                                , CET6: {{ student.cet6_score }}
+                                                                                {% endif %}
+                                                                            </td>
+                                                                            <td>+{{ english_score|round(1) }}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <div class="alert alert-info mt-2">
+                                                                     <strong>加分项总分:</strong> 
+                                                                     {{ (academic_score + scholarship_score + volunteer_score + english_score)|round(1) }}分
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <div class="card shadow-sm" style="background-color: {% if student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course %}#fff{% else %}#f8d7da{% endif %};">
+                                                            <div class="card-header {% if student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course and total_score >= 90 %}bg-success text-white{% elif student.has_application and student.passed_exam and student.class_approved and not student.has_failed_course and total_score >= 80 %}bg-danger text-white{% else %}bg-light{% endif %}">
+                                                                <h5 class="card-title mb-0">总评结果</h5>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <p class="mb-1"><strong>基础分:</strong> 
+                                                                            {{ base_score }}分
+                                                                        </p>
+                                                                        <p class="mb-1"><strong>加分项总分:</strong> 
+                                                                            {{ (academic_score + scholarship_score + volunteer_score + english_score)|round(1) }}分
+                                                                        </p>
+                                                                        <p class="mb-0"><strong>最终总分:</strong> 
+                                                                            <span class="font-weight-bold {% if total_score >= 90 %}text-danger{% endif %}" style="font-size: 1.2em;">
+                                                                                {{ total_score|round(1) }}分
+                                                                            </span>
+                                                                        </p>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <p class="mb-1"><strong>评定等级:</strong> 
+                                                                            {% if not student.has_application or not student.passed_exam or not student.class_approved or student.has_failed_course %}
+                                                                            <span class="badge" style="background-color:#ff4d4d!important;color:white;font-weight:bold;font-size:1.2em">不合格</span>
+                                                                            {% elif total_score >= 95 %}
+                                                                            <span class="badge" style="background-color:#9933cc!important;color:white;font-weight:bold;font-size:1.2em">特别优秀(A++)</span>
+                                                                            {% elif total_score >= 90 %}
+                                                                            <span class="badge" style="background-color:#33cc33!important;color:white;font-weight:bold;font-size:1.2em">特别优秀(A+)</span>
+                                                                            {% elif total_score >= 85 %}
+                                                                            <span class="badge" style="background-color:#ff3399!important;color:white;font-weight:bold;font-size:1.2em">优秀(A)</span>
+                                                                            {% elif total_score >= 80 %}
+                                                                            <span class="badge" style="background-color:#ff9933!important;color:white;font-weight:bold;font-size:1.2em">优秀(A-)</span>
+                                                                            {% elif total_score >= 75 %}
+                                                                            <span class="badge" style="background-color:#ffcc00!important;color:black;font-weight:bold;font-size:1.2em">良好(B+)</span>
+                                                                            {% elif total_score >= 70 %}
+                                                                            <span class="badge" style="background-color:#ffff33!important;color:black;font-weight:bold;font-size:1.2em">良好(B)</span>
+                                                                            {% elif total_score >= 65 %}
+                                                                            <span class="badge" style="background-color:#3399ff!important;color:white;font-weight:bold;font-size:1.2em">基本合格(C+)</span>
+                                                                            {% elif total_score >= 60 %}
+                                                                            <span class="badge" style="background-color:#00ccff!important;color:white;font-weight:bold;font-size:1.2em">基本合格(C)</span>
+                                                                            {% else %}
+                                                                            <span class="badge" style="background-color:#ff4d4d!important;color:white;font-weight:bold;font-size:1.2em">不合格</span>
+                                                                            {% endif %}
+                                                                        </p>
+                                                                        <p class="mb-1"><strong>备注:</strong> {{ student.remark or '无' }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 备注和保存按钮 -->
+                        <div class="card mt-3 mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">评分备注</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="batchRemarkFooter" class="form-label">评分备注（可选）</label>
+                                    <textarea class="form-control" id="batchRemarkFooter" name="batch_remark" rows="2" placeholder="输入对本次评分的备注信息..."></textarea>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-danger" id="saveScoresBtn" disabled onclick="saveScores()">
+                                        <i class="fas fa-save"></i> 保存评分结果
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 没有找到符合筛选条件的学生，请调整筛选条件后重试。
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 添加JavaScript函数 -->
+<script>
+// 定义全局变量，存储等级列索引
+window.GRADE_COLUMN_INDEX = 11; // 默认值，将在初始化时自动更新
+
+function calculateScores() {
+    console.log("计算评分函数被调用");
+    
+    // 获取所有选中的学生
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    console.log("选中的学生数量:", checkboxes.length);
+    
+    if (checkboxes.length === 0) {
+        alert('请至少选择一名学生进行评分计算');
+        return;
+    }
+    
+    // 告诉用户正在处理
+    alert('正在准备计算评分，页面将在提交后刷新...');
+    
+    // 清空之前的选中学生容器
+    const container = document.getElementById('selectedStudentsContainer');
+    container.innerHTML = '';
+    
+    // 为每个选中的学生创建隐藏输入字段
+    checkboxes.forEach(checkbox => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'student_ids';
+        input.value = checkbox.value;
+        container.appendChild(input);
+        console.log("添加学生ID:", checkbox.value);
+    });
+    
+    // 设置计算和保存参数
+    document.getElementById('calculateParam').value = '1';
+    document.getElementById('saveParam').value = '1';
+    document.getElementById('batchCalculate').value = '1';
+    
+    console.log("表单准备完成");
+    
+    // 避开网页限制解除插件干扰，通过超简单的方法提交表单
+    // 创建一个临时表单按钮
+    var realButton = document.createElement('input');
+    realButton.setAttribute('type', 'submit');
+    realButton.setAttribute('value', '提交');
+    realButton.style.display = 'none';
+    
+    // 把按钮附加到表单后，然后点击它
+    try {
+        console.log("正在尝试提交表单...");
+        // 使用正常方式提交表单
+        document.getElementById('batchScoreForm').appendChild(realButton);
+        realButton.click();
+    } catch (error) {
+        console.error("提交表单时发生错误:", error);
+        // 尝试最直接的方式跳转
+        alert("提交过程中发生错误，将尝试通过 window.location 提交表单。请稍候...");
+        
+        const form = document.getElementById('batchScoreForm');
+        const url = form.action + (form.action.indexOf('?') > -1 ? '&' : '?') + 
+                    'calculate=1&save=1&batch_calculate=1&student_ids=' + 
+                    Array.from(checkboxes).map(cb => cb.value).join(',');
+        
+        window.location.href = url;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('页面DOMContentLoaded事件触发');
+    
+    // 调试信息 - 检查学生表格和行
+    const debugTable = function() {
+        console.log('=== 调试表格和学生行 ===');
+        const tableElement = document.querySelector('.table-responsive table');
+        if (tableElement) {
+            console.log('找到表格元素');
+            console.log('表格显示状态:', tableElement.style.display);
+            console.log('表格可见性:', tableElement.offsetParent !== null ? '可见' : '不可见');
+        } else {
+            console.log('找不到表格元素');
+        }
+        
+        const studentRows = document.querySelectorAll('tr[data-student-id]');
+        console.log(`找到学生行数量: ${studentRows.length}`);
+        
+        if (studentRows.length > 0) {
+            console.log('第一个学生行:', studentRows[0]);
+            console.log('第一个学生行显示状态:', studentRows[0].style.display);
+            console.log('第一个学生行可见性:', studentRows[0].offsetParent !== null ? '可见' : '不可见');
+        }
+        console.log('========================');
+    };
+    
+    // 初始调试
+    debugTable();
+    
+    // 确保表格始终显示
+    const tableElement = document.querySelector('.table-responsive table');
+    if (tableElement) {
+        console.log('确保表格可见');
+        tableElement.style.display = 'table';
+    } else {
+        console.log('找不到表格元素');
+    }
+    
+    // 调试表格状态
+    setTimeout(debugTable, 50);
+    
+    // 设置详情按钮事件
+    setupDetailButtons();
+    
+    // 初始化按钮状态
+    const checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
+    const selectedCount = document.getElementById('selectedCount');
+    const saveScoresBtn = document.getElementById('saveScoresBtn');
+    const calculateBtn = document.getElementById('calculateBtn');
+    
+    if (selectedCount) selectedCount.textContent = checkedCount.toString();
+    if (saveScoresBtn) saveScoresBtn.disabled = checkedCount === 0;
+    if (calculateBtn) calculateBtn.disabled = checkedCount === 0;
+    
+    // 工具提示
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    if (tooltipTriggerList.length > 0) {
+        tooltipTriggerList.forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+    }
+    
+    // 初始化学生行数据
+    console.log('开始初始化学生行数据');
+    initializeRows();
+    
+    // 确保所有学生行可见
+    console.log('确保所有学生行可见');
+    const studentRows = document.querySelectorAll('tr[data-student-id]');
+    studentRows.forEach(row => {
+        row.style.display = '';
+    });
+    
+    // 调试学生行状态
+    setTimeout(debugTable, 150);
+    
+    // 进行排序
+    console.log('对学生行进行排序');
+    setTimeout(function() {
+        sortStudentsByGradeAndScore();
+        // 分页功能初始化
+        initPagination();
+        resetPagination();
+        
+        // 最终调试
+        setTimeout(debugTable, 50);
+    }, 100);
+    
+    // 检查URL中是否有calculate参数，且没有no_recalc参数，防止循环计算
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('calculate') && urlParams.get('calculate') === '1' && !urlParams.has('no_recalc')) {
+        console.log('页面加载完成，检测到calculate参数，准备执行计算...');
+        // 给一点延迟确保DOM完全加载
+        setTimeout(() => {
+            document.getElementById('calculateBtn').click();
+        }, 500);
+    }
+});
+
+// 分页功能
+function initPagination() {
+    const tableBody = document.querySelector('#studentListBody');
+    
+    // 修改：只获取可见的学生行(不包含display:none的行)
+    const rows = Array.from(tableBody.querySelectorAll('tr[data-student-id]')).filter(row => 
+        window.getComputedStyle(row).display !== 'none' && 
+        !row.classList.contains('filtered-out') && 
+        row.style.display !== 'none'
+    );
+    
+    const totalItems = rows.length;
+    const startItemEl = document.getElementById('startItem');
+    const endItemEl = document.getElementById('endItem');
+    const totalItemsEl = document.getElementById('totalItems');
+    const pagination = document.getElementById('pagination');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageJumpInput = document.getElementById('pageJumpInput');
+    const pageJumpBtn = document.getElementById('pageJumpBtn');
+    const paginationContainer = document.getElementById('pagination-container-top');
+    const pageSizeSelector = document.getElementById('pageSizeSelector');
+
+    let currentPage = 1;
+    let pageSize = pageSizeSelector ? parseInt(pageSizeSelector.value) : 20;
+    let totalPages = Math.ceil(totalItems / pageSize);
+    
+    // 如果表格为空或没有可见行，隐藏分页容器并显示提示
+    if (totalItems === 0 && paginationContainer) {
+        paginationContainer.style.display = 'none';
+        
+        // 检查是否存在筛选条件
+        const dropdownBtn = document.getElementById('gradeFilterDropdown');
+        const isFiltering = dropdownBtn && dropdownBtn.textContent !== '等级';
+        
+        if (isFiltering) {
+            // 查找是否已存在提示消息
+            let alertEl = document.querySelector('.alert-no-visible-students');
+            
+            // 如果不存在，创建一个
+            if (!alertEl) {
+                alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-info text-center mt-3 alert-no-visible-students';
+                alertEl.innerHTML = `<i class="fas fa-info-circle me-2"></i>当前筛选条件下没有符合条件的学生。
+                               <button type="button" class="btn-close float-end" onclick="clearAllFilters()"></button>`;
+                
+                const tableContainer = document.querySelector('.table-responsive');
+                if (tableContainer && tableContainer.parentNode) {
+                    tableContainer.parentNode.insertBefore(alertEl, tableContainer);
+                }
+            }
+        }
+    } else if (paginationContainer) {
+        paginationContainer.style.display = '';
+        
+        // 移除可能存在的"无可见学生"提示
+        const noStudentsAlert = document.querySelector('.alert-no-visible-students');
+        if (noStudentsAlert) {
+            noStudentsAlert.remove();
+        }
+    }
+
+    // 分页大小选择器
+    if (pageSizeSelector) {
+        // 移除可能的旧监听器
+        pageSizeSelector.removeEventListener('change', pageSizeChangeHandler);
+        // 添加新监听器
+        pageSizeSelector.addEventListener('change', pageSizeChangeHandler);
+    }
+    
+    // 分页大小变化处理函数
+    function pageSizeChangeHandler() {
+        console.log('页面大小改变:', this.value);
+        pageSize = parseInt(this.value);
+        currentPage = 1;
+        totalPages = Math.ceil(totalItems / pageSize);
+        
+        generatePaginationLinks();
+        updatePagination();
+        renderPage();
+    }
+
+    // 生成分页链接
+    function generatePaginationLinks() {
+        // 清除旧的页码链接（保留首尾按钮）
+        const paginationItems = Array.from(pagination.querySelectorAll('.page-item'));
+        paginationItems.forEach((item, index) => {
+            if (index !== 0 && index !== paginationItems.length - 1) {
+                item.remove();
+            }
+        });
+        
+        // 添加页码链接
+        const maxPagesToShow = 5; // 最多显示的页码数
+        
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+        
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+        
+        // 插入点是最后一个元素（下一页按钮）
+        const insertBeforeElement = pagination.lastElementChild;
+        
+        // 添加第一页和省略号（如果需要）
+        if (startPage > 1) {
+            const firstPageItem = document.createElement('li');
+            firstPageItem.className = 'page-item';
+            firstPageItem.innerHTML = '<a class="page-link" href="#" data-page="1">1</a>';
+            pagination.insertBefore(firstPageItem, insertBeforeElement);
+            
+            if (startPage > 2) {
+                const ellipsisItem = document.createElement('li');
+                ellipsisItem.className = 'page-item disabled';
+                ellipsisItem.innerHTML = '<span class="page-link">...</span>';
+                pagination.insertBefore(ellipsisItem, insertBeforeElement);
+            }
+        }
+        
+        // 添加页码
+        for (let i = startPage; i <= endPage; i++) {
+            const pageItem = document.createElement('li');
+            pageItem.className = 'page-item' + (i === currentPage ? ' active' : '');
+            pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+            pagination.insertBefore(pageItem, insertBeforeElement);
+        }
+        
+        // 添加最后一页和省略号（如果需要）
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsisItem = document.createElement('li');
+                ellipsisItem.className = 'page-item disabled';
+                ellipsisItem.innerHTML = '<span class="page-link">...</span>';
+                pagination.insertBefore(ellipsisItem, insertBeforeElement);
+            }
+            
+            const lastPageItem = document.createElement('li');
+            lastPageItem.className = 'page-item';
+            lastPageItem.innerHTML = `<a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>`;
+            pagination.insertBefore(lastPageItem, insertBeforeElement);
+        }
+        
+        // 重新绑定页码点击事件
+        const paginationLinks = document.querySelectorAll('.pagination .page-link[data-page]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                currentPage = parseInt(this.getAttribute('data-page'));
+                updatePagination();
+                renderPage();
+                return false;
+            });
+        });
+    }
+
+    // 更新分页显示
+    function updatePagination() {
+        // 更新显示项计数
+        if (startItemEl && endItemEl && totalItemsEl) {
+            const startIndex = (currentPage - 1) * pageSize + 1;
+            const endIndex = Math.min(startIndex + pageSize - 1, totalItems);
+            
+            startItemEl.textContent = totalItems > 0 ? startIndex : 0;
+            endItemEl.textContent = endIndex;
+            totalItemsEl.textContent = totalItems;
+            
+            // 添加：更新页码跳转输入框的值为当前页码
+            if (pageJumpInput) {
+                pageJumpInput.placeholder = `${currentPage}/${totalPages}`;
+            }
+        }
+        
+        // 更新页码链接状态
+        const paginationLinks = document.querySelectorAll('.pagination .page-link[data-page]');
+        paginationLinks.forEach(link => {
+            const page = parseInt(link.getAttribute('data-page'));
+            if (page === currentPage) {
+                link.parentElement.classList.add('active');
+            } else {
+                link.parentElement.classList.remove('active');
+            }
+        });
+        
+        // 更新前后页按钮状态
+        if (prevPageBtn) {
+            if (currentPage === 1) {
+                prevPageBtn.parentElement.classList.add('disabled');
+            } else {
+                prevPageBtn.parentElement.classList.remove('disabled');
+            }
+        }
+        
+        if (nextPageBtn) {
+            if (currentPage >= totalPages) {
+                nextPageBtn.parentElement.classList.add('disabled');
+            } else {
+                nextPageBtn.parentElement.classList.remove('disabled');
+            }
+        }
+    }
+
+    // 渲染当前页数据 - 优化以减少屏幕闪烁
+    function renderPage() {
+        // 修改：只获取可见的学生行(不包含display:none的行)
+        const visibleRows = rows;
+        
+        // 计算当前页显示范围
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        
+        // 当前页应该显示的行
+        const currentPageRows = visibleRows.slice(startIndex, endIndex);
+        
+        // 隐藏所有可见行
+        visibleRows.forEach(row => {
+            const studentId = row.getAttribute('data-student-id');
+            row.style.display = 'none';
+            
+            // 同时隐藏详情行
+            const detailRow = document.getElementById(`detail-${studentId}`);
+            if (detailRow) {
+                detailRow.style.display = 'none';
+            }
+        });
+        
+        // 显示当前页的行
+        window.requestAnimationFrame(() => {
+            currentPageRows.forEach(row => {
+                row.style.display = '';
+            });
+        });
+        
+        console.log(`页面渲染完成，当前页：${currentPage}，每页显示：${pageSize}，显示范围：${startIndex+1}-${Math.min(endIndex, totalItems)}，总行数：${totalItems}`);
+    }
+
+    // 绑定前后页按钮点击事件
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentPage > 1) {
+                currentPage--;
+                generatePaginationLinks();
+                updatePagination();
+                renderPage();
+            }
+            return false;
+        });
+    }
+    
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentPage < totalPages) {
+                currentPage++;
+                generatePaginationLinks();
+                updatePagination();
+                renderPage();
+            }
+            return false;
+        });
+    }
+    
+    // 绑定页码跳转按钮事件
+    if (pageJumpBtn && pageJumpInput) {
+        pageJumpBtn.addEventListener('click', function(e) {
+            // 阻止事件冒泡和默认行为
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const pageNum = parseInt(pageJumpInput.value);
+            if (pageNum && pageNum >= 1 && pageNum <= totalPages) {
+                currentPage = pageNum;
+                generatePaginationLinks();
+                updatePagination();
+                renderPage();
+                console.log(`已跳转到第${pageNum}页`);
+            } else {
+                alert(`请输入有效的页码 (1-${totalPages})`);
+                pageJumpInput.value = '';
+            }
+            
+            // 防止事件继续传播
+            return false;
+        });
+        
+        // 为输入框添加回车键事件
+        pageJumpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                pageJumpBtn.click();
+                return false;
+            }
+        });
+    }
+    
+    // 添加焦点事件，方便用户看到可输入的页码范围
+    if (pageJumpInput) {
+        pageJumpInput.addEventListener('focus', function() {
+            this.placeholder = `${currentPage}/${totalPages}`;
+        });
+
+        pageJumpInput.addEventListener('blur', function() {
+            this.placeholder = `${currentPage}/${totalPages}`;
+        });
+    }
+    
+    // 初始化分页
+    generatePaginationLinks();
+    updatePagination();
+    renderPage();
+}
+
+function saveScores() {
+    console.log("保存评分函数被调用");
+    
+    // 获取所有选中的学生
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    console.log("选中的学生数量:", checkboxes.length);
+    
+    if (checkboxes.length === 0) {
+        alert('请至少选择一名学生进行保存');
+        return;
+    }
+    
+    // 告诉用户正在处理
+    alert('正在准备保存评分结果，页面将在提交后刷新...');
+    
+    // 清空之前的选中学生容器
+    const container = document.getElementById('selectedStudentsContainer');
+    container.innerHTML = '';
+    
+    // 为每个选中的学生创建隐藏输入字段
+    checkboxes.forEach(checkbox => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'student_ids';
+        input.value = checkbox.value;
+        container.appendChild(input);
+        console.log("添加学生ID:", checkbox.value);
+    });
+    
+    // 设置保存参数
+    document.getElementById('saveParam').value = '1';
+    document.getElementById('calculateParam').value = '0';
+    document.getElementById('batchCalculate').value = '1';
+    
+    console.log("表单准备完成");
+    
+    // 避开网页限制解除插件干扰，通过超简单的方法提交表单
+    // 创建一个临时表单按钮
+    var realButton = document.createElement('input');
+    realButton.setAttribute('type', 'submit');
+    realButton.setAttribute('value', '提交');
+    realButton.style.display = 'none';
+    
+    // 把按钮附加到表单后，然后点击它
+    try {
+        console.log("正在尝试提交表单...");
+        // 使用正常方式提交表单
+        document.getElementById('batchScoreForm').appendChild(realButton);
+        realButton.click();
+    } catch (error) {
+        console.error("提交表单时发生错误:", error);
+        // 尝试最直接的方式跳转
+        alert("提交过程中发生错误，将尝试通过 window.location 提交表单。请稍候...");
+        
+        const form = document.getElementById('batchScoreForm');
+        const url = form.action + (form.action.indexOf('?') > -1 ? '&' : '?') + 
+                    'save=1&calculate=0&batch_calculate=1&student_ids=' + 
+                    Array.from(checkboxes).map(cb => cb.value).join(',');
+        
+        window.location.href = url;
+    }
+}
+
+// 筛选学生显示等级
+function filterStudentsByGrade(grade) {
+    console.log('=== 筛选等级开始 ===');
+    console.log(`筛选等级: ${grade}`);
+    
+    try {
+        // 每次筛选前，先恢复所有学生行到原始状态
+        restoreStudentRowsOriginalState();
+        
+        // 更新筛选按钮文字
+        const dropdownBtn = document.getElementById('gradeFilterDropdown');
+        let btnText = '等级';
+        
+        const gradeLabels = {
+            'A++': '特别优秀(A++)',
+            'A+': '特别优秀(A+)',
+            'A': '优秀(A)',
+            'A-': '优秀(A-)',
+            'B+': '良好(B+)',
+            'B': '良好(B)',
+            'C+': '基本合格(C+)',
+            'C': '基本合格(C)',
+            'F': '不合格(F)'
+        };
+        
+        if (grade !== 'all') {
+            btnText = gradeLabels[grade] || grade;
+        }
+        
+        dropdownBtn.textContent = btnText;
+        
+        // 删除可能存在的提示消息
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // 获取所有学生行
+        const tbody = document.getElementById('studentListBody');
+        let studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+        
+        // 如果没有找到足够的行，尝试恢复原始状态并重新获取
+        if (studentRows.length === 0 && tbody) {
+            console.warn('没有找到学生行，尝试恢复表格状态...');
+            restoreTableState();
+            studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+        }
+        
+        console.log(`找到 ${studentRows.length} 个学生行`);
+        
+        if (studentRows.length === 0) {
+            console.error('没有找到学生行，可能表格还没有完全加载');
+            
+            // 显示提示信息
+            const alertEl = document.createElement('div');
+            alertEl.className = 'alert alert-info text-center mt-3 mb-2';
+            alertEl.innerHTML = `<i class="fas fa-info-circle me-2"></i>正在加载学生数据，请稍候...`;
+            
+            const tableContainer = document.querySelector('.table-responsive');
+            if (tableContainer && tableContainer.parentNode) {
+                tableContainer.parentNode.insertBefore(alertEl, tableContainer);
+            }
+            
+            return;
+        }
+        
+        // 获取表格和表格容器
+        const tableElement = document.querySelector('.table-responsive table');
+        const tableContainer = document.querySelector('.table-responsive');
+        
+        if (!tableElement) {
+            console.error('找不到表格元素');
+            return;
+        }
+        
+        // 确保表格可见
+        if (tableElement) {
+            tableElement.style.display = 'table';
+            tableElement.classList.remove('d-none');
+        }
+        
+        // 显示全部学生
+        if (grade === 'all') {
+            console.log('显示全部等级的学生');
+            
+            // 显示所有学生行
+            studentRows.forEach(row => {
+                row.style.display = '';
+                row.classList.remove('d-none', 'filtered-out');
+                row.classList.add('filtered-in');
+                
+                // 隐藏详情行
+                const studentId = row.getAttribute('data-student-id');
+                if (studentId) {
+                    const detailRow = document.getElementById(`detail-${studentId}`);
+                    if (detailRow) {
+                        detailRow.style.display = 'none';
+                    }
+                }
+            });
+            
+            // 按等级和分数排序
+            sortStudentsByGradeAndScore();
+            
+            // 更新分页
+            resetPagination();
+            
+            // 重新设置详情按钮事件
+            setTimeout(setupDetailButtons, 100);
+            
+            console.log('=== 筛选等级结束(全部) ===');
+            return;
+        }
+        
+        // 筛选特定等级的学生 - 简化匹配逻辑
+        console.log(`正在筛选 ${grade} 等级的学生`);
+        
+        // 收集匹配的学生行
+        const matchingRows = [];
+        
+        // 使用全局等级列索引或默认值11
+        const gradeColIndex = window.GRADE_COLUMN_INDEX || 11;
+        console.log(`使用等级列索引: ${gradeColIndex}`);
+        
+        // 遍历所有学生行，优先隐藏所有行
+        studentRows.forEach(row => {
+            // 先隐藏所有行
+            row.style.display = 'none';
+            row.classList.add('filtered-out');
+            row.classList.remove('filtered-in');
+            
+            // 隐藏详情行
+            const studentId = row.getAttribute('data-student-id');
+            if (studentId) {
+                const detailRow = document.getElementById(`detail-${studentId}`);
+                if (detailRow) {
+                    detailRow.style.display = 'none';
+                }
+            }
+            
+            // 获取学生行的等级信息
+            let matchFound = false;
+            const cells = row.querySelectorAll('td');
+            
+            // 检查等级单元格
+            const gradeCell = cells[gradeColIndex - 1]; // 索引从0开始
+            if (gradeCell) {
+                const cellText = gradeCell.textContent.trim().toLowerCase();
+                const targetGrade = grade.toLowerCase();
+                
+                // 根据等级进行匹配
+                if (targetGrade === 'a++' && (cellText.includes('特别优秀') && (cellText.includes('a++') || cellText.includes('++')))) {
+                    matchFound = true;
+                } else if (targetGrade === 'a+' && (cellText.includes('特别优秀') && cellText.includes('a+') && !cellText.includes('++') || cellText.includes('+'))) {
+                    matchFound = true;
+                } else if (targetGrade === 'a' && cellText.includes('优秀') && !cellText.includes('-') && !cellText.includes('+')) {
+                    matchFound = true;
+                } else if (targetGrade === 'a-' && cellText.includes('优秀') && cellText.includes('-')) {
+                    matchFound = true;
+                } else if (targetGrade === 'b+' && cellText.includes('良好') && cellText.includes('+')) {
+                    matchFound = true;
+                } else if (targetGrade === 'b' && cellText.includes('良好') && !cellText.includes('+')) {
+                    matchFound = true;
+                } else if (targetGrade === 'c+' && cellText.includes('基本合格') && cellText.includes('+')) {
+                    matchFound = true;
+                } else if (targetGrade === 'c' && cellText.includes('基本合格') && !cellText.includes('+')) {
+                    matchFound = true;
+                } else if (targetGrade === 'f' && cellText.includes('不合格')) {
+                    matchFound = true;
+                }
+            }
+            
+            // 如果匹配，添加到匹配行数组
+            if (matchFound) {
+                matchingRows.push(row);
+            }
+        });
+        
+        console.log(`找到 ${matchingRows.length} 个匹配的学生行`);
+        
+        // 如果没有找到匹配的学生，显示提示信息
+        if (matchingRows.length === 0) {
+            // 显示无匹配学生的提示信息
+            const alertEl = document.createElement('div');
+            alertEl.className = 'alert alert-warning text-center mt-3';
+            alertEl.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>没有符合等级 <strong>${gradeLabels[grade]}</strong> 的学生，请尝试其他等级筛选。
+                           <button type="button" class="btn-close float-end" onclick="clearAllFilters()"></button>`;
+            
+            if (tableContainer && tableContainer.parentNode) {
+                tableContainer.parentNode.insertBefore(alertEl, tableContainer);
+            }
+        } else {
+            // 只显示匹配的学生行
+            matchingRows.forEach(row => {
+                row.style.display = '';
+                row.classList.remove('d-none', 'filtered-out');
+                row.classList.add('filtered-in');
+            });
+        }
+        
+        // 更新分页 - 只会显示可见行
+        resetPagination();
+        
+        // 重新设置详情按钮事件
+        setTimeout(setupDetailButtons, 100);
+        
+        console.log('=== 筛选等级结束 ===');
+    } catch (error) {
+        // 捕获并记录任何错误
+        console.error('筛选过程中发生错误:', error);
+        
+        // 错误恢复 - 显示所有学生
+        forceShowAllStudents();
+        
+        // 显示错误消息
+        const alertEl = document.createElement('div');
+        alertEl.className = 'alert alert-danger text-center my-3';
+        alertEl.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>筛选过程中发生错误，已显示所有学生。
+                       <button type="button" class="btn-close float-end" onclick="this.parentNode.remove()"></button>`;
+        
+        const tableContainer = document.querySelector('.table-responsive');
+        if (tableContainer && tableContainer.parentNode) {
+            tableContainer.parentNode.insertBefore(alertEl, tableContainer);
+        }
+    }
+}
+
+// 新增：恢复表格到原始状态
+function restoreTableState() {
+    console.log('恢复表格到原始状态...');
+    
+    // 确保表格可见
+    const tableElement = document.querySelector('.table-responsive table');
+    if (tableElement) {
+        tableElement.style.display = 'table';
+        tableElement.classList.remove('d-none');
+    }
+    
+    // 找到学生列表容器
+    const tbody = document.getElementById('studentListBody');
+    if (!tbody) {
+        console.error('找不到学生列表容器 #studentListBody');
+        return;
+    }
+    
+    // 获取备份的学生行
+    if (window.originalStudentRows && window.originalStudentRows.length > 0) {
+        console.log(`从备份中恢复 ${window.originalStudentRows.length} 个学生行`);
+        
+        // 清空当前tbody中的学生行
+        Array.from(tbody.childNodes).forEach(node => {
+            if (node.classList && node.classList.contains('student-row')) {
+                tbody.removeChild(node);
+            }
+        });
+        
+        // 添加备份的学生行
+        window.originalStudentRows.forEach(row => {
+            tbody.appendChild(row.cloneNode(true));
+        });
+    } else {
+        console.warn('没有找到学生行备份');
+    }
+}
+
+// 新增：恢复所有学生行到原始状态
+function restoreStudentRowsOriginalState() {
+    console.log('恢复所有学生行到原始状态...');
+    
+    const tbody = document.getElementById('studentListBody');
+    if (!tbody) {
+        console.error('找不到学生列表容器 #studentListBody');
+        return;
+    }
+    
+    // 确保表格可见
+    const tableElement = document.querySelector('.table-responsive table');
+    if (tableElement) {
+        tableElement.style.display = 'table';
+        tableElement.classList.remove('d-none');
+    }
+    
+    // 获取当前所有学生行（包括隐藏的）
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    
+    // 第一次运行时，备份原始学生行
+    if (!window.originalStudentRows) {
+        console.log('备份原始学生行...');
+        window.originalStudentRows = Array.from(studentRows).map(row => row.cloneNode(true));
+    }
+    
+    // 恢复所有行的状态
+    studentRows.forEach(row => {
+        // 去掉可能影响选择的类和样式
+        row.classList.remove('filtered-in', 'filtered-out', 'd-none');
+        row.style.display = '';
+    });
+    
+    console.log(`已恢复 ${studentRows.length} 个学生行到原始状态`);
+}
+
+// 新增：完全重置表格和数据
+function resetTableAndData() {
+    console.log('重置表格和数据...');
+    
+    // 清除所有筛选状态
+    clearAllFilters();
+    
+    // 获取表格容器
+    const tableElement = document.querySelector('.table-responsive table');
+    const tbody = document.getElementById('studentListBody');
+    
+    if (!tbody || !tableElement) {
+        console.error('找不到表格元素');
+        return;
+    }
+    
+    // 如果有备份，恢复原始数据
+    if (window.originalStudentRows && window.originalStudentRows.length > 0) {
+        console.log(`从备份中恢复 ${window.originalStudentRows.length} 个学生行`);
+        
+        // 清空当前tbody中的所有学生行
+        const currentRows = tbody.querySelectorAll('tr.student-row');
+        currentRows.forEach(row => {
+            tbody.removeChild(row);
+        });
+        
+        // 添加备份的学生行
+        window.originalStudentRows.forEach(row => {
+            const newRow = row.cloneNode(true);
+            // 确保行状态正确
+            newRow.style.display = '';
+            newRow.classList.remove('filtered-in', 'filtered-out', 'd-none');
+            tbody.appendChild(newRow);
+        });
+        
+        // 初始化数据
+        initializeRows();
+    } else {
+        // 如果没有备份，强制刷新页面
+        console.warn('没有学生行备份，尝试刷新页面');
+        window.location.reload();
+    }
+}
+
+// 修改：改进initializeRows函数，增加备份功能
+function initializeRows() {
+    console.log('初始化学生行数据...');
+    
+    // 获取所有学生行
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    
+    // 备份原始学生行（如果尚未备份）
+    if (!window.originalStudentRows && studentRows.length > 0) {
+        console.log('备份原始学生行...');
+        window.originalStudentRows = Array.from(studentRows).map(row => row.cloneNode(true));
+    }
+    
+    // 使用全局等级列索引
+    const gradeColIndex = window.GRADE_COLUMN_INDEX || 11;
+    
+    // 确保所有学生行显示
+    studentRows.forEach(row => {
+        // 重置显示状态
+        row.style.display = '';
+        row.classList.remove('d-none', 'filtered-in', 'filtered-out');
+        
+        // 获取等级并设置为属性
+        const gradeCell = row.querySelector(`td:nth-child(${gradeColIndex})`);
+        
+        if (gradeCell) {
+            const badgeText = gradeCell.textContent.trim();
+            const grade = getStudentGradeFromText(badgeText);
+            row.setAttribute('data-grade', grade || '');
+            console.log(`学生 ${row.getAttribute('data-student-id')} 设置等级: ${grade}`);
+        } else {
+            console.log(`未找到学生 ${row.getAttribute('data-student-id')} 的等级单元格`);
+        }
+        
+        // 获取分数并设置为属性
+        const scoreElement = row.querySelector('td:nth-child(10)');
+        if (scoreElement) {
+            const scoreText = scoreElement.textContent.trim();
+            const scoreMatch = scoreText.match(/(\d+(\.\d+)?)/);
+            if (scoreMatch) {
+                row.setAttribute('data-score', scoreMatch[1]);
+            }
+        }
+    });
+    
+    console.log(`初始化了 ${studentRows.length} 行学生数据`);
+    return studentRows.length;
+}
+
+// 修改：forceShowAllStudents函数，使用更安全的方式
+function forceShowAllStudents() {
+    console.log('强制显示所有学生行...');
+    
+    // 获取所有学生行
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    
+    if (studentRows.length === 0) {
+        console.warn('没有找到任何学生行，尝试恢复表格状态');
+        restoreTableState();
+        return;
+    }
+    
+    console.log(`找到 ${studentRows.length} 个学生行`);
+    
+    // 强制显示所有学生行
+    studentRows.forEach(row => {
+        // 确保行显示
+        row.style.display = '';
+        row.classList.remove('d-none', 'filtered-out');
+        row.classList.add('filtered-in');
+    });
+    
+    // 确保表格可见
+    const tableElement = document.querySelector('.table-responsive table');
+    if (tableElement) {
+        tableElement.style.display = 'table';
+        tableElement.classList.remove('d-none');
+    }
+    
+    console.log(`已显示 ${studentRows.length} 个学生行`);
+}
+
+// 从文本中获取学生等级
+function getStudentGradeFromText(badgeText) {
+    if (!badgeText) return '';
+    
+    // 直接匹配具体的等级文本，更精确地处理
+    if (badgeText.includes('特别优秀(A++)')) return 'A++';
+    if (badgeText.includes('特别优秀(A+)')) return 'A+';
+    if (badgeText.includes('优秀(A)') && !badgeText.includes('A-') && !badgeText.includes('A+')) return 'A';
+    if (badgeText.includes('优秀(A-)')) return 'A-';
+    if (badgeText.includes('良好(B+)')) return 'B+';
+    if (badgeText.includes('良好(B)') && !badgeText.includes('B+')) return 'B';
+    if (badgeText.includes('基本合格(C+)')) return 'C+';
+    if (badgeText.includes('基本合格(C)') && !badgeText.includes('C+')) return 'C';
+    if (badgeText.includes('不合格(F)')) return 'F';
+    
+    // 精确匹配简短形式
+    if (badgeText === 'A++') return 'A++';
+    if (badgeText === 'A+') return 'A+';
+    if (badgeText === 'A') return 'A';
+    if (badgeText === 'A-') return 'A-';
+    if (badgeText === 'B+') return 'B+';
+    if (badgeText === 'B') return 'B';
+    if (badgeText === 'C+') return 'C+';
+    if (badgeText === 'C') return 'C';
+    if (badgeText === 'F') return 'F';
+    
+    return '';
+}
+
+// 获取学生等级
+function getStudentGrade(row) {
+    // 首先检查data-grade属性
+    const dataGrade = row.getAttribute('data-grade');
+    if (dataGrade) return dataGrade;
+    
+    // 使用全局等级列索引
+    const gradeColIndex = window.GRADE_COLUMN_INDEX;
+    
+    // 使用检测到的等级列
+    const gradeCell = row.querySelector(`td:nth-child(${gradeColIndex})`);
+    if (!gradeCell) return '';
+    
+    const badgeElement = gradeCell.querySelector('.badge') || 
+                        gradeCell.querySelector('span.badge') ||
+                        gradeCell.querySelector('span[class*="badge"]');
+    
+    if (!badgeElement) {
+        // 如果没有找到徽章元素，直接使用单元格文本
+        const gradeText = gradeCell.textContent.trim();
+        const grade = getStudentGradeFromText(gradeText);
+        
+        // 缓存结果到数据属性
+        row.setAttribute('data-grade', grade || '');
+        return grade;
+    }
+    
+    const badgeText = badgeElement.textContent.trim();
+    const grade = getStudentGradeFromText(badgeText);
+    
+    // 缓存结果到数据属性
+    row.setAttribute('data-grade', grade || '');
+    
+    return grade;
+}
+
+// 辅助函数：添加一个直接从DOM筛选特定等级学生的函数
+function getStudentsByGrade(grade) {
+    const gradeLabels = {
+        'A++': '特别优秀(A++)',
+        'A+': '特别优秀(A+)', 
+        'A': '优秀(A)',
+        'A-': '优秀(A-)',
+        'B+': '良好(B+)',
+        'B': '良好(B)',
+        'C+': '基本合格(C+)',
+        'C': '基本合格(C)',
+        'F': '不合格'
+    };
+    
+    const targetText = gradeLabels[grade];
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    
+    return Array.from(studentRows).filter(row => {
+        const badge = row.querySelector('td:nth-child(11) .badge');
+        return badge && badge.textContent.includes(targetText);
+    });
+}
+
+// 辅助函数：按分数排序学生行
+function sortByScore(rows) {
+    // 按分数从高到低排序
+    rows.sort((a, b) => {
+        const scoreA = getStudentScore(a);
+        const scoreB = getStudentScore(b);
+        return scoreB - scoreA; // 从高到低
+    });
+    
+    // 将行按排序后的顺序重新添加到表格中
+    const tbody = document.getElementById('studentListBody');
+    if (tbody) {
+        // 从DOM中移除这些行
+        rows.forEach(row => {
+            if (row.parentNode) {
+                row.parentNode.removeChild(row);
+            }
+        });
+        
+        // 按排序顺序添加回去
+        rows.forEach(row => {
+            tbody.appendChild(row);
+            
+            // 如果有详情行，也添加
+            const studentId = row.getAttribute('data-student-id');
+            if (studentId) {
+                const detailRow = document.getElementById(`detail-${studentId}`);
+                if (detailRow) {
+                    tbody.appendChild(detailRow);
+                }
+            }
+        });
+    }
+}
+
+// 获取学生分数
+function getStudentScore(row) {
+    // 尝试从data-score属性获取分数
+    const score = row.getAttribute('data-score');
+    if (score) {
+        return parseFloat(score);
+    }
+    
+    // 如果没有data-score属性，尝试从第10列的内容获取
+    const scoreCell = row.querySelector('td:nth-child(10)');
+    if (scoreCell) {
+        const scoreText = scoreCell.textContent.trim();
+        // 从文本中提取数字
+        const scoreMatch = scoreText.match(/(\d+(\.\d+)?)/);
+        if (scoreMatch) {
+            return parseFloat(scoreMatch[1]);
+        }
+    }
+    
+    return 0; // 默认返回0
+}
+
+// 按等级和分数排序学生
+function sortStudentsByGradeAndScore() {
+    console.log("开始按等级和分数排序...");
+    const tbody = document.getElementById('studentListBody');
+    if (!tbody) {
+        console.error("找不到学生列表容器");
+        return;
+    }
+    
+    // 获取所有学生行
+    const rows = Array.from(tbody.querySelectorAll('tr.student-row'));
+    console.log(`找到 ${rows.length} 个学生行用于排序`);
+    
+    if (rows.length === 0) {
+        console.warn("没有找到学生行，无法排序");
+        return;
+    }
+    
+    // 按等级和分数排序
+    rows.sort((a, b) => {
+        const gradeA = getStudentGrade(a);
+        const gradeB = getStudentGrade(b);
+        
+        // 定义等级权重
+        const gradeWeights = {
+            'A++': 9, 'A+': 8, 'A': 7, 'A-': 6, 
+            'B+': 5, 'B': 4, 'C+': 3, 'C': 2, 'F': 1
+        };
+        
+        const weightA = gradeWeights[gradeA] || 0;
+        const weightB = gradeWeights[gradeB] || 0;
+        
+        // 首先按等级排序
+        if (weightA !== weightB) {
+            return weightB - weightA; // 高等级在前
+        }
+        
+        // 同等级按分数排序
+        const scoreA = getStudentScore(a);
+        const scoreB = getStudentScore(b);
+        return scoreB - scoreA; // 高分在前
+    });
+    
+    // 重新排列DOM
+    rows.forEach(row => {
+        // 从DOM中移除
+        if (row.parentNode) {
+            row.parentNode.removeChild(row);
+        }
+        
+        // 添加回表格
+        tbody.appendChild(row);
+        
+        // 如果有详情行，也添加
+        const studentId = row.getAttribute('data-student-id');
+        if (studentId) {
+            const detailRow = document.getElementById(`detail-${studentId}`);
+            if (detailRow) {
+                tbody.appendChild(detailRow);
+            }
+        }
+    });
+    
+    console.log("排序完成");
+}
+
+// 简化的分页更新函数
+function resetPagination() {
+    // 获取可见行数量（过滤掉隐藏的行）
+    const visibleRows = Array.from(document.querySelectorAll('#studentListBody tr.student-row')).filter(row => 
+        window.getComputedStyle(row).display !== 'none' && 
+        !row.classList.contains('filtered-out') && 
+        row.style.display !== 'none'
+    );
+    const visibleCount = visibleRows.length;
+    
+    // 更新分页信息
+    const startItemEl = document.getElementById('startItem');
+    const endItemEl = document.getElementById('endItem');
+    const totalItemsEl = document.getElementById('totalItems');
+    
+    if (startItemEl) startItemEl.textContent = visibleCount > 0 ? 1 : 0;
+    if (endItemEl) endItemEl.textContent = Math.min(visibleCount, 20);
+    if (totalItemsEl) totalItemsEl.textContent = visibleCount;
+    
+    // 显示或隐藏分页容器
+    const paginationContainer = document.getElementById('pagination-container-top');
+    if (paginationContainer) {
+        paginationContainer.style.display = visibleCount > 0 ? '' : 'none';
+        
+        // 处理没有可见学生的情况
+        if (visibleCount === 0) {
+            // 检查是否存在筛选条件
+            const dropdownBtn = document.getElementById('gradeFilterDropdown');
+            const isFiltering = dropdownBtn && dropdownBtn.textContent !== '等级';
+            
+            if (isFiltering) {
+                // 查找是否已存在提示消息
+                let alertEl = document.querySelector('.alert-no-visible-students');
+                
+                // 如果不存在，创建一个
+                if (!alertEl) {
+                    alertEl = document.createElement('div');
+                    alertEl.className = 'alert alert-info text-center mt-3 alert-no-visible-students';
+                    alertEl.innerHTML = `<i class="fas fa-info-circle me-2"></i>当前筛选条件下没有符合条件的学生。
+                                  <button type="button" class="btn-close float-end" onclick="clearAllFilters()"></button>`;
+                    
+                    const tableContainer = document.querySelector('.table-responsive');
+                    if (tableContainer && tableContainer.parentNode) {
+                        tableContainer.parentNode.insertBefore(alertEl, tableContainer);
+                    }
+                }
+            }
+        } else {
+            // 如果有可见学生，移除可能存在的"无可见学生"提示
+            const noStudentsAlert = document.querySelector('.alert-no-visible-students');
+            if (noStudentsAlert) {
+                noStudentsAlert.remove();
+            }
+        }
+    }
+    
+    // 重置当前页为第1页
+    if (typeof initPagination === 'function') {
+        initPagination();
+    }
+}
+
+// 清除所有筛选
+function clearAllFilters() {
+    console.log('清除所有筛选状态...');
+    
+    // 获取所有学生行
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    
+    // 显示表格
+    const tableElement = document.querySelector('.table-responsive table');
+    if (tableElement) {
+        tableElement.style.display = 'table';
+        tableElement.classList.remove('d-none');
+    }
+    
+    // 清除已有的筛选样式和隐藏
+    studentRows.forEach(row => {
+        // 重置显示状态
+        row.style.display = '';
+        row.classList.remove('d-none', 'filtered-out', 'filtered-in');
+    });
+    
+    // 删除所有筛选提示消息
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // 重置筛选按钮文本
+    const dropdownBtn = document.getElementById('gradeFilterDropdown');
+    if (dropdownBtn) {
+        dropdownBtn.textContent = '等级';
+    }
+    
+    // 重新排序
+    sortStudentsByGradeAndScore();
+    
+    // 更新分页
+    resetPagination();
+    
+    // 重新设置详情按钮事件
+    setTimeout(setupDetailButtons, 100);
+    
+    console.log('已清除所有筛选状态');
+}
+
+// 确保不会被其他脚本干扰
+function overrideConflictingFunctions() {
+    // 备份原始的筛选函数
+    window.originalFilterStudentsByGrade = filterStudentsByGrade;
+    
+    // 监听表格DOM变化，如果发现筛选被破坏，重新应用
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer && window.MutationObserver) {
+        const observer = new MutationObserver(function(mutations) {
+            // 查找当前筛选条件
+            const currentGrade = document.getElementById('gradeFilterDropdown').textContent;
+            
+            // 检查是否有已筛选但被意外显示的行
+            const visibleRows = document.querySelectorAll('#studentListBody > tr.student-row:not([style*="display: none"]):not(.filtered-in)');
+            
+            // 如果不是"全部"筛选但有未标记的可见行，重新应用筛选
+            if (currentGrade !== '等级' && visibleRows.length > 0) {
+                console.log('检测到筛选状态被破坏，重新应用...');
+                // 重新应用当前筛选
+                let gradeToFilter = 'all';
+                
+                // 根据按钮文本确定当前等级
+                const gradeLabels = {
+                    'A++': '特别优秀(A++)',
+                    'A+': '特别优秀(A+)',
+                    'A': '优秀(A)',
+                    'A-': '优秀(A-)',
+                    'B+': '良好(B+)',
+                    'B': '良好(B)',
+                    'C+': '基本合格(C+)',
+                    'C': '基本合格(C)',
+                    'F': '不合格(F)'
+                };
+                
+                for (const [grade, label] of Object.entries(gradeLabels)) {
+                    if (currentGrade === label || currentGrade.includes(grade)) {
+                        gradeToFilter = grade;
+                        break;
+                    }
+                }
+                
+                // 应用筛选
+                if (gradeToFilter !== 'all') {
+                    window.originalFilterStudentsByGrade(gradeToFilter);
+                }
+            }
+        });
+        
+        // 开始观察表格变化
+        observer.observe(tableContainer, { 
+            childList: true, 
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
+        
+        console.log('已设置表格变化监听器');
+    }
+}
+
+// 检测等级列
+function detectGradeColumn() {
+    console.log('正在检测等级列...');
+    
+    // 首先检查表头
+    const headers = document.querySelectorAll('table thead th');
+    let gradeColumnIndex = -1;
+    
+    // 方法1：根据表头文本查找
+    for (let i = 0; i < headers.length; i++) {
+        const headerText = headers[i].textContent.trim().toLowerCase();
+        if (headerText === '等级' || headerText.includes('等级')) {
+            gradeColumnIndex = i + 1; // 列索引从1开始
+            console.log(`根据表头找到等级列索引: ${gradeColumnIndex}`);
+            window.GRADE_COLUMN_INDEX = gradeColumnIndex;
+            return;
+        }
+    }
+    
+    // 方法2：检查所有行的内容
+    const studentRows = document.querySelectorAll('#studentListBody > tr.student-row');
+    if (studentRows.length > 0) {
+        // 存储每列匹配的等级关键词数量
+        const columnMatches = {};
+        
+        studentRows.forEach((row, rowIdx) => {
+            if (rowIdx < 10) { // 只检查前10行
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, idx) => {
+                    const cellText = cell.textContent.trim().toLowerCase();
+                    if (cellText.match(/优秀|良好|合格|不合格|[a-f][+-]?/)) {
+                        columnMatches[idx + 1] = (columnMatches[idx + 1] || 0) + 1;
+                    }
+                });
+            }
+        });
+        
+        // 找出匹配最多的列
+        let maxMatches = 0;
+        for (const [column, count] of Object.entries(columnMatches)) {
+            if (count > maxMatches) {
+                maxMatches = count;
+                gradeColumnIndex = parseInt(column);
+            }
+        }
+        
+        if (gradeColumnIndex > 0) {
+            console.log(`根据内容匹配找到等级列索引: ${gradeColumnIndex}（包含 ${maxMatches} 个匹配项）`);
+            window.GRADE_COLUMN_INDEX = gradeColumnIndex;
+            return;
+        }
+    }
+    
+    // 方法3：默认使用倒数第二列
+    const sampleRow = studentRows[0];
+    if (sampleRow) {
+        const cellCount = sampleRow.querySelectorAll('td').length;
+        if (cellCount > 1) {
+            gradeColumnIndex = cellCount - 1; // 倒数第二列
+            console.log(`使用默认方法(倒数第二列)确定等级列索引: ${gradeColumnIndex}`);
+            window.GRADE_COLUMN_INDEX = gradeColumnIndex;
+            return;
+        }
+    }
+    
+    // 如果仍然没找到，使用默认值11
+    console.log('无法检测等级列，使用默认值11');
+    window.GRADE_COLUMN_INDEX = 11;
+}
+
+// 添加初始化代码
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('页面加载完成，初始化等级筛选...');
+    
+    try {
+        // 自动检测等级列
+        detectGradeColumn();
+        
+        // 删除这里的showAllGradesInTable调用
+        // 延迟初始化，确保DOM已经完全渲染
+        setTimeout(function() {
+            console.log('开始初始化筛选功能...');
+            
+            // 强制显示表格
+            const tableElement = document.querySelector('.table-responsive table');
+            if (tableElement) {
+                tableElement.style.display = 'table';
+                tableElement.classList.remove('d-none');
+            }
+            
+            // 清除可能存在的筛选状态和警告信息
+            clearAllFilters();
+            
+            // 确保所有学生行都可见（不做筛选）
+            forceShowAllStudents();
+            
+            // 初始化所有学生行数据
+            initializeRows();
+            
+            // 重置分页
+            resetPagination();
+            
+            // 设置详情按钮事件
+            setupDetailButtons();
+            
+            // 确保筛选按钮显示正确文本
+            const dropdownBtn = document.getElementById('gradeFilterDropdown');
+            if (dropdownBtn) {
+                dropdownBtn.textContent = '等级';
+            }
+            
+            // 确保其他脚本不会干扰筛选效果
+            overrideConflictingFunctions();
+            
+            console.log('筛选功能初始化完成');
+        }, 500);
+    } catch (error) {
+        console.error('初始化过程中发生错误:', error);
+    }
+});
+
+// 详情按钮点击事件
+function setupDetailButtons() {
+    console.log('设置详情按钮事件...');
+    const detailButtons = document.querySelectorAll('.detail-btn');
+    
+    // 移除旧的事件监听器（防止重复绑定）
+    detailButtons.forEach(button => {
+        const oldButton = button.cloneNode(true);
+        button.parentNode.replaceChild(oldButton, button);
+    });
+    
+    // 添加新的事件监听器
+    document.querySelectorAll('.detail-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const studentId = this.getAttribute('data-student-id');
+            const detailRow = document.getElementById(`detail-${studentId}`);
+            
+            if (detailRow) {
+                console.log(`切换详情显示: ${studentId}, 当前状态: ${detailRow.style.display}`);
+                if (detailRow.style.display === 'none' || detailRow.style.display === '') {
+                    detailRow.style.display = 'table-row';
+                } else {
+                    detailRow.style.display = 'none';
+                }
+            } else {
+                console.error(`找不到学生 ${studentId} 的详情行`);
+            }
+        });
+    });
+    
+    console.log(`已设置 ${detailButtons.length} 个详情按钮事件`);
+}
+</script>
+
+{% block scripts %}
+<!-- 这里留空，但保留block，防止与其他脚本块冲突 -->
+{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #c91c23;
+        --secondary-color: #6f42c1;
+        --success-color: #1cc88a;
+        --info-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --light-color: #f8f9fc;
+        --dark-color: #5a5c69;
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+    }
+    
+    /* 主内容区样式 */
+    .main-content {
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    /* 侧边栏 */
+    .glass-sidebar {
+        background-color: #c91c23;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        overflow-y: auto;
+    }
+    
+    .sidebar-content {
+        padding-bottom: 40px;
+    }
+    
+    .sidebar-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-title {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+    }
+    
+    .sidebar-user {
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .sidebar-nav {
+        padding: 15px;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-item.active .sidebar-link {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 12px 15px;
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    /* 适应性修复 */
+    @media (max-width: 992px) {
+        .glass-sidebar {
+            position: fixed;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            height: 100%;
+            z-index: 1000;
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100%;
+        }
+    }
+    
+    /* 新增样式 */
+    .detail-row {
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .detail-content {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .bg-party-red {
+        background-color: #c00;
+    }
+    
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .badge {
+        padding: 6px 10px;
+        border-radius: 50rem;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* 表格样式优化 */
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        table-layout: fixed; /* 固定表格布局 */
+        width: 100%;
+    }
+    
+    /* 下拉菜单样式修复 */
+    .dropdown-menu {
+        z-index: 9999 !important;
+    }
+    
+    .dropdown-fixed-top .dropdown-menu {
+        position: fixed !important;
+        transform: none !important;
+        top: auto !important;
+        left: auto !important;
+        margin-top: 2px !important;
+    }
+    
+    .table thead th {
+        border-top: none;
+        background-color: #f8f9fa;
+        vertical-align: middle;
+        position: relative; /* 确保相对定位，使下拉菜单定位正确 */
+    }
+    
+    /* 下拉菜单打开时调整位置 */
+    .dropdown.show .dropdown-menu {
+        display: block;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .table tbody td {
+        vertical-align: middle;
+        word-break: break-word; /* 允许长文本在单元格内换行 */
+    }
+    
+    /* 调整特定列的样式 */
+    .table .badge {
+        white-space: normal; /* 允许徽章文本换行 */
+        text-align: center;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    /* 操作按钮列样式 */
+    .table .btn-sm {
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* 详情行样式优化 */
+    .detail-content {
+        padding: 1.5rem !important;
+    }
+    
+    /* 单元格内容垂直居中 */
+    .table td {
+        vertical-align: middle !important;
+    }
+    
+    /* 分页样式优化 */
+    .pagination {
+        margin-bottom: 0;
+    }
+    
+    .pagination .page-link {
+        color: #c91c23;
+        border-color: #dee2e6;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #c91c23;
+        border-color: #c91c23;
+        color: white;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
+    
+    /* 分页跳转框样式优化 */
+    #pageJumpInput {
+        transition: all 0.3s ease;
+        text-align: center;
+        font-weight: bold;
+    }
+    
+    #pageJumpInput:focus {
+        border-color: #c91c23;
+        box-shadow: 0 0 0 0.2rem rgba(201, 28, 35, 0.25);
+        width: 120px; /* 聚焦时增加宽度 */
+    }
+    
+    /* 分页相关样式优化 */
+    .pagination-container-top {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: #fff;
+    }
+    
+    /* 优化表格渲染性能 */
+    .table-responsive {
+        will-change: transform; /* 提示浏览器会有变化，优化渲染性能 */
+        transform: translateZ(0); /* 触发硬件加速 */
+    }
+    
+    /* 用于防止屏幕闪烁的样式 */
+    .student-row {
+        transition: background-color 0.1s ease;
+        transform: translateZ(0); /* 触发硬件加速 */
+        backface-visibility: hidden; /* 防止闪烁 */
+        perspective: 1000px; /* 防止闪烁 */
+    }
+    
+    /* 优化下拉选择框样式 */
+    #pageSizeSelector {
+        min-width: 120px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    #pageSizeSelector:focus {
+        box-shadow: 0 0 0 0.2rem rgba(201, 28, 35, 0.25);
+        border-color: #c91c23;
+    }
+    
+    /* 确保下拉菜单显示在最上层 */
+    .dropdown-menu {
+        z-index: 10000 !important;
+        max-height: 400px;
+        overflow-y: auto;
+        width: auto !important;
+        min-width: 200px !important;
+    }
+    
+    /* 等级筛选按钮样式 */
+    #gradeFilterDropdown {
+        min-width: 130px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* 修复下拉位置问题 */
+    .dropdown {
+        position: static;
+    }
+    
+    .dropdown-menu {
+        position: absolute;
+        left: auto;
+        right: auto;
+    }
+    
+    /* 修复下拉菜单显示问题 */
+    .dropdown-menu {
+        z-index: 99999 !important;
+        position: absolute !important;
+        margin-top: 0 !important;
+        padding: 8px 0;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    /* 美化下拉菜单 */
+    .dropdown-item {
+        padding: 8px 16px;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* 确保表格容器不会遮挡下拉菜单 */
+    .table-responsive {
+        overflow-x: visible;
+        z-index: 1;
+    }
+    
+    /* 增加表头的z-index */
+    thead th {
+        position: relative;
+        z-index: 10;
+    }
+    
+    /* 优化下拉菜单 */
+    .dropdown-menu {
+        z-index: 100000 !important;
+        position: absolute !important;
+        width: auto !important;
+        min-width: 220px !important;
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 2px !important;
+        transform: none !important;
+    }
+    
+    /* 修复下拉位置和显示问题 */
+    .dropdown {
+        position: relative !important;
+    }
+    
+    /* 等级筛选按钮样式优化 */
+    #gradeFilterDropdown {
+        min-width: 180px !important;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* 调整表格容器，避免遮挡下拉菜单 */
+    .table-responsive {
+        overflow: visible !important;
+        z-index: 1;
+    }
+    
+    /* 修复当没有数据时提示信息的显示 */
+    .alert-warning {
+        z-index: 1;
+        position: relative;
+    }
+    
+    /* 表头样式，确保下拉菜单正确显示 */
+    thead th {
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* 设置等级下拉菜单列的宽度 */
+    table th:nth-child(11) {
+        min-width: 180px !important;
+        width: 180px !important;
+    }
+    
+    /* 下拉菜单层叠优先级 */
+    .dropdown-menu {
+        z-index: 1050 !important;
+    }
+    
+    /* 下拉按钮层叠优先级 */
+    .btn-group {
+        z-index: 1040 !important;
+    }
+    
+    /* 下拉菜单层叠优先级 - 确保最高优先级 */
+    .dropdown-menu {
+        z-index: 9999 !important;
+    }
+    
+    /* 下拉按钮层叠优先级 - 确保最高优先级 */
+    .btn-group {
+        z-index: 9998 !important;
+    }
+    
+    /* 使等级筛选下拉菜单始终显示在最上层 */
+    #gradeFilterDropdown + .dropdown-menu {
+        z-index: 10000 !important;
+    }
+    
+    /* 下拉菜单层叠优先级 - 确保最高优先级 */
+    .dropdown-menu {
+        z-index: 10000 !important;
+    }
+    
+    /* 下拉按钮层叠优先级 - 确保最高优先级 */
+    .btn-group {
+        z-index: 9999 !important;
+    }
+    
+    /* 特别为等级筛选下拉框设置更高优先级 */
+    #gradeFilterDropdown + .dropdown-menu {
+        z-index: 10001 !important;
+    }
+    
+    /* 确保筛选按钮总是在前面 */
+    th:nth-child(11) {
+        z-index: 1050 !important;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% endblock content %} 

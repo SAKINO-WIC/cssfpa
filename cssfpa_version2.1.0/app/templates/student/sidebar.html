@@ -1,0 +1,15 @@
+<div class="col-md-3">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">导航菜单</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            <a href="{{ url_for('student.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'student.index' %}active{% endif %}">
+                <i class="fas fa-user me-2"></i>个人信息
+            </a>
+            <a href="{{ url_for('student.my_files') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'student.my_files' %}active{% endif %}">
+                <i class="fas fa-file me-2"></i>文件管理
+            </a>
+        </div>
+    </div>
+</div>

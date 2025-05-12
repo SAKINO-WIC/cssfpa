@@ -1,0 +1,55 @@
+<div class="glass-sidebar h-100">
+    <div class="sidebar-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="sidebar-logo-img">
+        <span class="sidebar-logo-text">综合评分系统</span>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="sidebar-user-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="sidebar-user-info">
+            <div class="sidebar-user-name">{{ current_user.real_name }}</div>
+            <div class="sidebar-user-role">教师</div>
+        </div>
+    </div>
+    
+    <ul class="sidebar-nav">
+        <li class="sidebar-item {{ 'active' if request.endpoint == 'teacher.index' }}">
+            <a href="{{ url_for('teacher.index') }}" class="sidebar-link">
+                <i class="fas fa-user-graduate"></i>
+                <span>学生管理</span>
+            </a>
+        </li>
+        <li class="sidebar-item {{ 'active' if request.endpoint == 'teacher.score_configs' }}">
+            <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link">
+                <i class="fas fa-cog"></i>
+                <span>评分配置</span>
+            </a>
+        </li>
+        <li class="sidebar-item {{ 'active' if request.endpoint == 'teacher.batch_calculate' }}">
+            <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link">
+                <i class="fas fa-calculator"></i>
+                <span>批量评分</span>
+            </a>
+        </li>
+        <li class="sidebar-item {{ 'active' if request.endpoint == 'teacher.dashboard' }}">
+            <a href="{{ url_for('teacher.dashboard') }}" class="sidebar-link">
+                <i class="fas fa-chart-bar"></i>
+                <span>数据统计</span>
+            </a>
+        </li>
+        <li class="sidebar-item {{ 'active' if request.endpoint == 'teacher.change_password' }}">
+            <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                <i class="fas fa-key"></i>
+                <span>修改密码</span>
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>退出登录</span>
+            </a>
+        </li>
+    </ul>
+</div>

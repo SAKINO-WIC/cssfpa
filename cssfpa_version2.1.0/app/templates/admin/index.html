@@ -1,0 +1,952 @@
+{% extends "base.html" %}
+
+{% block title %}管理员控制面板 - 入党积极分子综合评分系统{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+    :root {
+        --primary-color: #c91c23;
+        --secondary-color: #6f42c1;
+        --success-color: #1cc88a;
+        --info-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --light-color: #f8f9fc;
+        --dark-color: #5a5c69;
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+    }
+    .user-table th, .user-table td {
+        vertical-align: middle;
+    }
+    
+    /* 操作按钮样式优化 */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .action-buttons .btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .action-buttons .btn i {
+        font-size: 14px;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    /* 学生信息部分 */
+    #studentInfoSection, #editStudentInfoSection, #addStudentInfoSection {
+        display: none;
+        border-top: 1px solid #dee2e6;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+    /* 侧边栏样式 */
+    .admin-sidebar {
+        min-height: calc(100vh - 56px);
+        background-color: #c91c23;
+        padding: 20px 0;
+    }
+    .admin-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        font-size: 0.95rem;
+    }
+    .admin-sidebar .nav-link:hover, 
+    .admin-sidebar .nav-link.active {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+    }
+    .admin-sidebar .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+    .admin-content {
+        padding: 20px;
+    }
+    .filter-card {
+        margin-bottom: 20px;
+    }
+    .card-stat {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .card-stat:hover {
+        transform: translateY(-5px);
+    }
+    .card-stat-admin {
+        border-left-color: #c91c23;
+    }
+    .card-stat-teacher {
+        border-left-color: #c91c23;
+    }
+    .card-stat-student {
+        border-left-color: #198754;
+    }
+    
+    /* 修改卡片头部和模态框颜色 */
+    .card-header.bg-primary, 
+    .modal-header.bg-primary,
+    .modal-header.bg-info {
+        background-color: #c91c23 !important;
+    }
+    
+    /* 按钮颜色 */
+    .btn-primary {
+        background-color: #c91c23;
+        border-color: #c91c23;
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: #a91520;
+        border-color: #a91520;
+    }
+    
+    /* 主内容左侧间距 */
+    @media (min-width: 768px) {
+        .admin-content {
+            transition: margin-left 0.3s ease;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 col-lg-2 px-0 admin-sidebar glass-sidebar">
+            <div class="position-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="allUsersLink" href="#" onclick="filterUsers('all')">
+                            <i class="fas fa-users"></i> 所有用户
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="adminUsersLink" href="#" onclick="filterUsers('admin')">
+                            <i class="fas fa-user-shield"></i> 管理员用户
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="teacherUsersLink" href="#" onclick="filterUsers('teacher')">
+                            <i class="fas fa-chalkboard-teacher"></i> 教师用户
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="studentUsersLink" href="#" onclick="filterUsers('student')">
+                            <i class="fas fa-user-graduate"></i> 学生用户
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link" href="{{ url_for('admin.index') }}">
+                            <i class="fas fa-tachometer-alt"></i> 控制面板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">
+                            <i class="fas fa-home"></i> 系统首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt"></i> 退出登录
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="col-md-10 col-lg-10 admin-content">
+            <!-- 数据统计 -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow card-stat card-stat-admin">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">管理员用户</h6>
+                                    <h4 class="mb-0 admin-count data-primary">0</h4>
+                                </div>
+                                <div class="display-4 text-danger">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow card-stat card-stat-teacher">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">教师用户</h6>
+                                    <h4 class="mb-0 teacher-count data-primary">0</h4>
+                                </div>
+                                <div class="display-4 text-primary">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow card-stat card-stat-student">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">学生用户</h6>
+                                    <h4 class="mb-0 student-count data-primary">0</h4>
+                                </div>
+                                <div class="display-4 text-success">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选卡片 -->
+            <div class="card shadow filter-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">用户筛选</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="usernameFilter" class="form-label">用户名</label>
+                                <input type="text" class="form-control" id="usernameFilter" placeholder="输入关键字">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="roleFilter" class="form-label">角色</label>
+                                <select class="form-select" id="roleFilter">
+                                    <option value="all">全部</option>
+                                    <option value="admin">管理员</option>
+                                    <option value="teacher">教师</option>
+                                    <option value="student">学生</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sortBy" class="form-label">排序方式</label>
+                                <select class="form-select" id="sortBy">
+                                    <option value="username">用户名</option>
+                                    <option value="role">角色</option>
+                                    <option value="created_at">创建时间</option>
+                                    <option value="last_login">最后登录</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-filter me-1"></i>应用筛选
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo me-1"></i>重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户列表卡片 -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">用户管理</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus me-1"></i>添加用户
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover user-table table-themed" id="userTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>角色</th>
+                                    <th>创建时间</th>
+                                    <th>最后登录</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr data-role="{{ user.role }}">
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger badge-themed">管理员</span>
+                                        {% elif user.role == 'teacher' %}
+                                        <span class="badge bg-primary badge-themed">教师</span>
+                                        {% else %}
+                                        <span class="badge bg-success badge-themed">学生</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else '从未登录' }}</td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-sm btn-info" onclick="viewUser('{{ user.id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="editUser('{{ user.id }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}', '{{ user.username }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加用户模态框 -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addUserModalLabel">添加用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="addUsername" class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addUsername" required>
+                        <div class="form-text">用户名必须唯一</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addPassword" class="form-label">密码 <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="addPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addRole" class="form-label">角色 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="addRole" required onchange="toggleStudentInfo('add')">
+                            <option value="student">学生</option>
+                            <option value="teacher">教师</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 学生特有信息 -->
+                    <div id="addStudentInfoSection">
+                        <h6 class="mt-4 mb-3">学生信息</h6>
+                        <div class="mb-3">
+                            <label for="addStudentName" class="form-label">姓名</label>
+                            <input type="text" class="form-control" id="addStudentName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="addStudentClass" class="form-label">班级</label>
+                            <input type="text" class="form-control" id="addStudentClass">
+                        </div>
+                        <div class="mb-3">
+                            <label for="addStudentDepartment" class="form-label">院系</label>
+                            <input type="text" class="form-control" id="addStudentDepartment">
+                        </div>
+                        <div class="mb-3">
+                            <label for="addStudentMajor" class="form-label">专业</label>
+                            <input type="text" class="form-control" id="addStudentMajor">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="addUserBtn">添加</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑用户模态框 -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editUserModalLabel">编辑用户</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="editPassword">
+                        <div class="form-text">留空表示不修改密码</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">角色 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editRole" required onchange="toggleStudentInfo('edit')">
+                            <option value="student">学生</option>
+                            <option value="teacher">教师</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 学生特有信息 -->
+                    <div id="editStudentInfoSection">
+                        <h6 class="mt-4 mb-3">学生信息</h6>
+                        <div class="mb-3">
+                            <label for="editStudentName" class="form-label">姓名</label>
+                            <input type="text" class="form-control" id="editStudentName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStudentClass" class="form-label">班级</label>
+                            <input type="text" class="form-control" id="editStudentClass">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStudentDepartment" class="form-label">院系</label>
+                            <input type="text" class="form-control" id="editStudentDepartment">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStudentMajor" class="form-label">专业</label>
+                            <input type="text" class="form-control" id="editStudentMajor">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="updateUserBtn">保存更改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 查看用户模态框 -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewUserModalLabel">用户详情</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="viewUserDetails">
+                <!-- 用户详情将通过JS动态添加 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">确认删除</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除用户 <strong id="deleteUserName"></strong> 吗？</p>
+                <p class="text-danger">此操作不可撤销，删除后用户所有信息将永久丢失！</p>
+                <input type="hidden" id="deleteUserId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// 设置CSRF令牌为所有AJAX请求
+$(document).ready(function() {
+    // 设置AJAX的CSRF令牌
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", $('meta[name="csrf-token"]').attr('content'));
+            }
+        }
+    });
+});
+
+// 显示/隐藏学生信息部分
+function toggleStudentInfo(prefix) {
+    const roleSelect = document.getElementById(prefix + 'Role');
+    const studentInfoSection = document.getElementById(prefix + 'StudentInfoSection');
+    
+    if (roleSelect.value === 'student') {
+        studentInfoSection.style.display = 'block';
+    } else {
+        studentInfoSection.style.display = 'none';
+    }
+}
+
+// 统计用户数量并更新显示
+function updateUserCounts() {
+    const rows = document.querySelectorAll('#userTable tbody tr:not([style*="display: none"])');
+    
+    let adminCount = 0;
+    let teacherCount = 0;
+    let studentCount = 0;
+    
+    rows.forEach(row => {
+        const role = row.getAttribute('data-role');
+        if (role === 'admin') adminCount++;
+        else if (role === 'teacher') teacherCount++;
+        else if (role === 'student') studentCount++;
+    });
+    
+    document.querySelector('.admin-count').textContent = adminCount;
+    document.querySelector('.teacher-count').textContent = teacherCount;
+    document.querySelector('.student-count').textContent = studentCount;
+}
+
+// 通过侧边栏快速筛选用户类型
+function filterUsers(role) {
+    // 更新激活的导航链接
+    document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.getElementById(role + 'UsersLink').classList.add('active');
+    
+    // 更新角色筛选下拉框
+    document.getElementById('roleFilter').value = role;
+    
+    // 应用筛选
+    applyFilters();
+}
+
+// 应用筛选条件
+function applyFilters() {
+    const usernameFilter = document.getElementById('usernameFilter').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const sortBy = document.getElementById('sortBy').value;
+    
+    const rows = Array.from(document.querySelectorAll('#userTable tbody tr'));
+    
+    // 筛选行
+    rows.forEach(row => {
+        const username = row.cells[1].textContent.toLowerCase();
+        const role = row.getAttribute('data-role');
+        
+        const matchesUsername = username.includes(usernameFilter);
+        const matchesRole = roleFilter === 'all' || role === roleFilter;
+        
+        if (matchesUsername && matchesRole) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // 排序行
+    const visibleRows = rows.filter(row => row.style.display !== 'none');
+    
+    visibleRows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+            case 'username':
+                aValue = a.cells[1].textContent.toLowerCase();
+                bValue = b.cells[1].textContent.toLowerCase();
+                return aValue.localeCompare(bValue);
+            
+            case 'role':
+                aValue = a.getAttribute('data-role');
+                bValue = b.getAttribute('data-role');
+                return aValue.localeCompare(bValue);
+            
+            case 'created_at':
+                aValue = new Date(a.cells[3].textContent);
+                bValue = new Date(b.cells[3].textContent);
+                return bValue - aValue; // 降序：最新的排在前面
+            
+            case 'last_login':
+                aValue = a.cells[4].textContent;
+                bValue = b.cells[4].textContent;
+                
+                // 处理"从未登录"的情况
+                if (aValue === '从未登录') return 1;
+                if (bValue === '从未登录') return -1;
+                
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+                return bValue - aValue; // 降序：最近登录的排在前面
+            
+            default:
+                return 0;
+        }
+    });
+    
+    // 重新添加排序后的行
+    const tbody = document.querySelector('#userTable tbody');
+    visibleRows.forEach(row => {
+        tbody.appendChild(row);
+    });
+    
+    // 更新用户统计
+    updateUserCounts();
+}
+
+// 重置筛选条件
+function resetFilters() {
+    document.getElementById('usernameFilter').value = '';
+    document.getElementById('roleFilter').value = 'all';
+    document.getElementById('sortBy').value = 'username';
+    
+    // 更新激活的导航链接
+    document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.getElementById('allUsersLink').classList.add('active');
+    
+    // 显示所有行
+    document.querySelectorAll('#userTable tbody tr').forEach(row => {
+        row.style.display = '';
+    });
+    
+    // 更新用户统计
+    updateUserCounts();
+}
+
+// 初始化时调用一次，确保正确显示
+document.addEventListener('DOMContentLoaded', function() {
+    toggleStudentInfo('add');
+    
+    // 添加用户
+    document.getElementById('addUserBtn').addEventListener('click', addUser);
+    
+    // 更新用户
+    document.getElementById('updateUserBtn').addEventListener('click', updateUser);
+    
+    // 确认删除用户
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteUser);
+    
+    // 初始化用户统计
+    updateUserCounts();
+});
+
+// 查看用户详情
+function viewUser(userId) {
+    fetch(`/admin/api/users/${userId}`)
+        .then(response => response.json())
+        .then(user => {
+            const viewUserDetails = document.getElementById('viewUserDetails');
+            let roleText = '';
+            if (user.role === 'admin') roleText = '<span class="badge bg-danger">管理员</span>';
+            else if (user.role === 'teacher') roleText = '<span class="badge bg-primary">教师</span>';
+            else roleText = '<span class="badge bg-success">学生</span>';
+            
+            let userDetailsHTML = `
+                <div class="mb-3">
+                    <h6>基本信息</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>用户ID</th>
+                            <td>${user.id}</td>
+                        </tr>
+                        <tr>
+                            <th>用户名</th>
+                            <td>${user.username}</td>
+                        </tr>
+                        <tr>
+                            <th>角色</th>
+                            <td>${roleText}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            // 如果是学生，显示学生信息
+            if (user.role === 'student' && user.student) {
+                userDetailsHTML += `
+                    <div class="mb-3">
+                        <h6>学生信息</h6>
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>学号</th>
+                                <td>${user.student.student_id || '-'}</td>
+                            </tr>
+                            <tr>
+                                <th>姓名</th>
+                                <td>${user.student.name || '-'}</td>
+                            </tr>
+                            <tr>
+                                <th>班级</th>
+                                <td>${user.student.class_name || '-'}</td>
+                            </tr>
+                            <tr>
+                                <th>院系</th>
+                                <td>${user.student.department || '-'}</td>
+                            </tr>
+                            <tr>
+                                <th>专业</th>
+                                <td>${user.student.major || '-'}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            viewUserDetails.innerHTML = userDetailsHTML;
+            
+            // 显示模态框
+            const viewUserModal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+            viewUserModal.show();
+        })
+        .catch(error => {
+            console.error('获取用户详情失败:', error);
+            alert('获取用户详情失败，请稍后再试');
+        });
+}
+
+// 编辑用户
+function editUser(userId) {
+    fetch(`/admin/api/users/${userId}`)
+        .then(response => response.json())
+        .then(user => {
+            // 填充基本表单字段
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editPassword').value = ''; // 清空密码字段
+            document.getElementById('editRole').value = user.role;
+            
+            // 处理学生信息
+            if (user.role === 'student' && user.student) {
+                document.getElementById('editStudentName').value = user.student.name || '';
+                document.getElementById('editStudentClass').value = user.student.class_name || '';
+                document.getElementById('editStudentDepartment').value = user.student.department || '';
+                document.getElementById('editStudentMajor').value = user.student.major || '';
+            } else {
+                // 清空学生信息字段
+                document.getElementById('editStudentName').value = '';
+                document.getElementById('editStudentClass').value = '';
+                document.getElementById('editStudentDepartment').value = '';
+                document.getElementById('editStudentMajor').value = '';
+            }
+            
+            // 根据角色显示/隐藏学生信息部分
+            toggleStudentInfo('edit');
+            
+            // 显示模态框
+            const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editUserModal.show();
+        })
+        .catch(error => {
+            console.error('获取用户信息失败:', error);
+            alert('获取用户信息失败，请稍后再试');
+        });
+}
+
+// 删除用户
+function deleteUser(userId, username) {
+    document.getElementById('deleteUserId').value = userId;
+    document.getElementById('deleteUserName').textContent = username;
+    
+    // 显示确认删除模态框
+    const deleteUserModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+    deleteUserModal.show();
+}
+
+// 确认删除用户
+function confirmDeleteUser() {
+    const userId = document.getElementById('deleteUserId').value;
+    
+    fetch(`/admin/api/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 关闭模态框
+            const deleteUserModal = bootstrap.Modal.getInstance(document.getElementById('deleteUserModal'));
+            deleteUserModal.hide();
+            
+            // 显示成功消息
+            alert(data.message);
+            
+            // 刷新页面
+            window.location.reload();
+        } else {
+            alert(data.message || '删除用户失败');
+        }
+    })
+    .catch(error => {
+        console.error('删除用户失败:', error);
+        alert('删除用户失败，请稍后再试');
+    });
+}
+
+// 添加用户
+function addUser() {
+    // 获取表单数据
+    const username = document.getElementById('addUsername').value.trim();
+    const password = document.getElementById('addPassword').value.trim();
+    const role = document.getElementById('addRole').value;
+    
+    if (!username || !password || !role) {
+        alert('请填写必填字段');
+        return;
+    }
+    
+    // 准备请求数据
+    const userData = {
+        username: username,
+        password: password,
+        role: role
+    };
+    
+    // 如果是学生，添加学生信息
+    if (role === 'student') {
+        userData.student_info = {
+            name: document.getElementById('addStudentName').value.trim(),
+            class_name: document.getElementById('addStudentClass').value.trim(),
+            department: document.getElementById('addStudentDepartment').value.trim(),
+            major: document.getElementById('addStudentMajor').value.trim()
+        };
+    }
+    
+    // 发送请求
+    fetch('/admin/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 关闭模态框
+            const addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+            addUserModal.hide();
+            
+            // 显示成功消息
+            alert(data.message);
+            
+            // 刷新页面
+            window.location.reload();
+        } else {
+            alert(data.message || '添加用户失败');
+        }
+    })
+    .catch(error => {
+        console.error('添加用户失败:', error);
+        alert('添加用户失败，请稍后再试');
+    });
+}
+
+// 更新用户
+function updateUser() {
+    // 获取表单数据
+    const userId = document.getElementById('editUserId').value;
+    const username = document.getElementById('editUsername').value.trim();
+    const password = document.getElementById('editPassword').value.trim();
+    const role = document.getElementById('editRole').value;
+    
+    if (!username || !role) {
+        alert('请填写必填字段');
+        return;
+    }
+    
+    // 准备请求数据
+    const userData = {
+        username: username,
+        role: role
+    };
+    
+    // 如果有输入密码，添加到请求数据中
+    if (password) {
+        userData.password = password;
+    }
+    
+    // 如果是学生，添加学生信息
+    if (role === 'student') {
+        userData.student_info = {
+            name: document.getElementById('editStudentName').value.trim(),
+            class_name: document.getElementById('editStudentClass').value.trim(),
+            department: document.getElementById('editStudentDepartment').value.trim(),
+            major: document.getElementById('editStudentMajor').value.trim()
+        };
+    }
+    
+    // 发送请求
+    fetch(`/admin/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 关闭模态框
+            const editUserModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            editUserModal.hide();
+            
+            // 显示成功消息
+            alert(data.message);
+            
+            // 刷新页面
+            window.location.reload();
+        } else {
+            alert(data.message || '更新用户失败');
+        }
+    })
+    .catch(error => {
+        console.error('更新用户失败:', error);
+        alert('更新用户失败，请稍后再试');
+    });
+}
+</script>
+{% endblock %} 

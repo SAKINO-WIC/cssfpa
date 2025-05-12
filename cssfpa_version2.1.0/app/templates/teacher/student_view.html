@@ -1,0 +1,800 @@
+{% extends "base.html" %}
+
+{% block title %}学生详情 - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 d-flex glass-sidebar p-0">
+            <div class="sidebar-content w-100">
+                <div class="sidebar-header text-center py-4">
+                    <h2 class="navbar-title text-white mb-0">评分系统</h2>
+                </div>
+                <div class="sidebar-user text-center">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-2">
+                        <span>{{ current_user.username[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+                    <small class="text-white-50">教师</small>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.index') }}" class="sidebar-link">
+                            <i class="fas fa-user-graduate me-2"></i>学生管理
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.score_configs') }}" class="sidebar-link">
+                            <i class="fas fa-cog me-2"></i>评分配置
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.batch_calculate') }}" class="sidebar-link">
+                            <i class="fas fa-calculator me-2"></i>批量评分
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.reports') }}" class="sidebar-link">
+                            <i class="fas fa-chart-bar me-2"></i>数据统计
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('teacher.change_password') }}" class="sidebar-link">
+                            <i class="fas fa-key me-2"></i>修改密码
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{{ url_for('auth.logout') }}" class="sidebar-link">
+                            <i class="fas fa-sign-out-alt me-2"></i>登出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 main-content">
+            <div class="d-md-none text-end mb-2">
+                <button class="btn btn-primary sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- 标题和操作按钮区域 -->
+            <div class="d-flex justify-content-between align-items-center py-3 mb-4 border-bottom">
+                <div class="d-flex align-items-center">
+                    <h2 class="h2 mb-0 me-3">{{ student.name }}</h2>
+                    <span class="badge bg-primary">{{ student.student_id }}</span>
+                </div>
+                <div class="action-group">
+                    <a href="{{ url_for('teacher.calculate_score', student_id=student.student_id) }}" class="btn btn-success action-btn">
+                        <i class="fas fa-calculator me-2"></i> 计算评分
+                    </a>
+                    <a href="{{ url_for('teacher.edit_student', student_id=student.student_id) }}" class="btn btn-primary action-btn">
+                        <i class="fas fa-edit me-2"></i> 编辑信息
+                    </a>
+                    <button type="button" class="btn btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteStudentModal">
+                        <i class="fas fa-trash me-2"></i> 删除学生
+                    </button>
+                    <a href="{{ url_for('teacher.index') }}" class="btn btn-secondary action-btn">
+                        <i class="fas fa-arrow-left me-2"></i> 返回列表
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 信息概览卡片 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-3 bg-party-red text-white p-3 border-end">
+                            <div class="text-center mb-3">
+                                <div class="avatar-placeholder rounded-circle mx-auto mb-3 bg-white">
+                                    <span class="text-party-red">{{ student.name[0] }}</span>
+                                </div>
+                                <h4>{{ student.name }}</h4>
+                                <p class="text-white-50 mb-0">{{ student.student_id }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-9 p-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="small text-muted mb-1">学院/专业</div>
+                                    <div class="h6">{{ student.department or '未设置' }} / {{ student.major or '未设置' }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="small text-muted mb-1">班级</div>
+                                    <div class="h6">{{ student.class_name or '未设置' }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="small text-muted mb-1">政治面貌</div>
+                                    <div class="h6">{{ student.political_status or '未设置' }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="small text-muted mb-1">综合评分</div>
+                                    <div class="h6" id="student-score-display">
+                                        {% if student.comprehensive_score is not none %}
+                                        <span class="text-primary fw-bold">
+                                            {% if student.comprehensive_score == student.comprehensive_score|int %}
+                                                {{ student.comprehensive_score|int }}分
+                                            {% else %}
+                                                {{ student.comprehensive_score|round(1) }}分
+                                            {% endif %}
+                                        </span>
+                                        {% else %}
+                                        未评定
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 信息标签页 - 新布局 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="studentInfoTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">个人基本信息</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab">学籍信息</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="political-tab" data-bs-toggle="tab" data-bs-target="#political" type="button" role="tab">政治状况</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance" type="button" role="tab">学业表现</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="honors-tab" data-bs-toggle="tab" data-bs-target="#honors" type="button" role="tab">荣誉与实践</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="studentInfoTabContent">
+                        <!-- 个人基本信息标签页 -->
+                        <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">学号</div>
+                                        <div class="info-value">{{ student.student_id }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">姓名</div>
+                                        <div class="info-value">{{ student.name }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">性别</div>
+                                        <div class="info-value">{{ student.gender or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">民族</div>
+                                        <div class="info-value">{{ student.ethnicity or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">籍贯</div>
+                                        <div class="info-value">{{ student.hometown or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">出生日期</div>
+                                        <div class="info-value">{{ student.birth_date or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">身份证号</div>
+                                        <div class="info-value">{{ student.id_card or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">手机号码</div>
+                                        <div class="info-value">{{ student.phone or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">电子邮箱</div>
+                                        <div class="info-value">{{ student.email or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">家庭住址</div>
+                                        <div class="info-value">{{ student.address or '未设置' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 学籍信息标签页 -->
+                        <div class="tab-pane fade" id="academic" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="info-item">
+                                        <div class="info-label">学院</div>
+                                        <div class="info-value">{{ student.department or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-item">
+                                        <div class="info-label">专业</div>
+                                        <div class="info-value">{{ student.major or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-item">
+                                        <div class="info-label">班级</div>
+                                        <div class="info-value">{{ student.class_name or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-item">
+                                        <div class="info-label">入学日期</div>
+                                        <div class="info-value">{{ student.enrollment_date or '未设置' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 政治状况标签页 -->
+                        <div class="tab-pane fade" id="political" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">政治面貌</div>
+                                        <div class="info-value">{{ student.political_status or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">团员证号</div>
+                                        <div class="info-value">{{ student.league_member_id or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">所在团支部</div>
+                                        <div class="info-value">{{ student.league_branch or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">入团日期</div>
+                                        <div class="info-value">{{ student.league_join_date or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">是否递交入党申请书</div>
+                                        <div class="info-value">
+                                            {% if student.has_application %}
+                                                <span class="badge bg-success">是</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">否</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">申请书递交日期</div>
+                                        <div class="info-value">{{ student.application_date|format_date('%Y-%m-%d') if student.application_date and student.has_application else '无' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">是否通过初党考试</div>
+                                        <div class="info-value">
+                                            {% if student.passed_exam %}
+                                                <span class="badge bg-success">是</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">否</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">是否通过支部大会表决</div>
+                                        <div class="info-value">
+                                            {% if student.class_approved %}
+                                                <span class="badge bg-success">是</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">否</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 学业表现标签页 -->
+                        <div class="tab-pane fade" id="performance" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">是否有不及格课程</div>
+                                        <div class="info-value">
+                                            {% if student.has_failed_course %}
+                                                <span class="badge bg-danger">是</span>
+                                            {% else %}
+                                                <span class="badge bg-success">否</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">综测成绩</div>
+                                        <div class="info-value">{{ student.comprehensive_test_score or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">综合评分</div>
+                                        <div class="info-value">
+                                            {% if student.comprehensive_score is not none %}
+                                            {{ student.comprehensive_score }}分
+                                            {% else %}
+                                            未评定
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">CET4成绩</div>
+                                        <div class="info-value">{{ student.cet4_score or '未参加' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">CET6成绩</div>
+                                        <div class="info-value">{{ student.cet6_score or '未参加' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">英语水平</div>
+                                        <div class="info-value">{{ student.english_level or '未设置' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">获得奖学金</div>
+                                        <div class="info-value">{{ student.scholarship or '无' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-item">
+                                        <div class="info-label">志愿服务时长</div>
+                                        <div class="info-value">{{ student.volunteer_hours or '0' }} 小时</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 荣誉与实践标签页 -->
+                        <div class="tab-pane fade" id="honors" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-party-red text-white">
+                                            <h5 class="card-title mb-0">所获荣誉</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if student.awards %}
+                                                {% set awards = student.awards|from_json %}
+                                                {% if awards %}
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>荣誉名称</th>
+                                                                    <th>级别</th>
+                                                                    <th>颁发单位</th>
+                                                                    <th>获得日期</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for award in awards %}
+                                                                    <tr>
+                                                                        <td>{{ award.name }}</td>
+                                                                        <td>{{ award.level }}</td>
+                                                                        <td>{{ award.organization }}</td>
+                                                                        <td>{{ award.date }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                {% else %}
+                                                    <p class="text-muted mb-0">暂无荣誉记录</p>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-muted mb-0">暂无荣誉记录</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-party-red text-white">
+                                            <h5 class="card-title mb-0">社会实践经历</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if student.social_practice %}
+                                                {% set practices = student.social_practice|from_json %}
+                                                {% if practices %}
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>实践名称</th>
+                                                                    <th>组织单位</th>
+                                                                    <th>开始日期</th>
+                                                                    <th>结束日期</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for practice in practices %}
+                                                                    <tr>
+                                                                        <td>{{ practice.title }}</td>
+                                                                        <td>{{ practice.organization }}</td>
+                                                                        <td>{{ practice.start_date }}</td>
+                                                                        <td>{{ practice.end_date }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="accordion mt-3" id="practiceAccordion">
+                                                        {% for practice in practices %}
+                                                            {% if practice.description %}
+                                                                <div class="accordion-item">
+                                                                    <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                                                                            {{ practice.title }} - 详情
+                                                                        </button>
+                                                                    </h2>
+                                                                    <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#practiceAccordion">
+                                                                        <div class="accordion-body">
+                                                                            {{ practice.description }}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <p class="text-muted mb-0">暂无实践经历记录</p>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-muted mb-0">暂无实践经历记录</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 删除学生确认对话框 -->
+<div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteStudentModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除学生 <strong>{{ student.name }}</strong> ({{ student.student_id }}) 吗？此操作不可撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form action="{{ url_for('teacher.delete_student', student_id=student.student_id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #c91c23;
+        --secondary-color: #6f42c1;
+        --success-color: #1cc88a;
+        --info-color: #36b9cc;
+        --warning-color: #f6c23e;
+        --danger-color: #e74a3b;
+        --light-color: #f8f9fc;
+        --dark-color: #5a5c69;
+        --party-red: #c91c23;
+        --party-red-rgb: 201, 28, 35;
+    }
+    
+    /* 背景和文本颜色类 */
+    .bg-party-red {
+        background-color: var(--party-red) !important;
+    }
+    
+    .text-party-red {
+        color: var(--party-red) !important;
+    }
+    
+    /* 主内容区样式 */
+    .main-content {
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    /* 侧边栏 */
+    .glass-sidebar {
+        background-color: #c91c23;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        overflow-y: auto;
+    }
+    
+    .sidebar-content {
+        padding-bottom: 40px;
+    }
+    
+    .sidebar-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-title {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 1px;
+    }
+    
+    .sidebar-user {
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .sidebar-nav {
+        padding: 15px;
+    }
+    
+    .sidebar-item {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-item.active .sidebar-link {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 12px 15px;
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    /* 操作按钮样式 */
+    .action-group {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .action-btn {
+        min-width: 140px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 新增样式 */
+    .info-item {
+        margin-bottom: 10px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        height: 100%;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+    
+    .info-value {
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 12px 20px;
+        color: #495057;
+        border: none;
+        border-radius: 0;
+        position: relative;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--party-red);
+        background: none;
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--party-red);
+    }
+    
+    .tab-pane {
+        padding: 20px 0;
+    }
+    
+    /* 适应性修复 */
+    @media (max-width: 992px) {
+        .glass-sidebar {
+            position: fixed;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            height: 100%;
+            z-index: 1000;
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100%;
+        }
+        
+        .action-group {
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            min-width: 120px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 移动端侧边栏切换
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.glass-sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击主内容区域时关闭侧边栏
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.addEventListener('click', function(e) {
+                    if (window.innerWidth < 992 && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+        }
+        
+        // 定时刷新学生评分数据
+        function refreshStudentScore() {
+            fetch(`/teacher/get_student_latest_score?student_id={{ student.student_id }}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const scoreDisplay = document.getElementById('student-score-display');
+                        if (scoreDisplay) {
+                            if (data.score !== null) {
+                                // 判断是否为整数
+                                const displayScore = Number.isInteger(Number(data.score)) ? 
+                                    parseInt(data.score) : Number(data.score).toFixed(1);
+                                
+                                scoreDisplay.innerHTML = `<span class="text-primary fw-bold">${displayScore}分</span>`;
+                                
+                                // 同时更新个人资料卡片中的评分和等级
+                                const performanceTab = document.getElementById('performance');
+                                if (performanceTab) {
+                                    const scoreElements = performanceTab.querySelectorAll('.current-score');
+                                    scoreElements.forEach(el => {
+                                        el.textContent = displayScore;
+                                    });
+                                    
+                                    // 更新评级
+                                    const gradeElement = performanceTab.querySelector('.score-grade');
+                                    if (gradeElement) {
+                                        let grade = '';
+                                        if (data.score >= 90) grade = '特别优秀';
+                                        else if (data.score >= 80) grade = '优秀';
+                                        else if (data.score >= 70) grade = '良好';
+                                        else if (data.score >= 60) grade = '基本合格';
+                                        else grade = '不合格';
+                                        
+                                        gradeElement.textContent = grade;
+                                    }
+                                }
+                            } else {
+                                scoreDisplay.textContent = '未评定';
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('获取学生评分数据出错:', error));
+        }
+        
+        // 每30秒刷新一次学生评分数据
+        setInterval(refreshStudentScore, 30000);
+        
+        // 页面加载时立即刷新一次
+        refreshStudentScore();
+    });
+</script>
+{% endblock %} 

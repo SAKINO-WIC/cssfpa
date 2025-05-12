@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}调试学生数据 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">学生数据调试</h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4>关键字段信息</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>字段</th>
+                    <th>值</th>
+                    <th>类型</th>
+                </tr>
+                <tr>
+                    <td>学号</td>
+                    <td>{{ debug_info.student_id }}</td>
+                    <td>{{ debug_info.student_id.__class__.__name__ }}</td>
+                </tr>
+                <tr>
+                    <td>姓名</td>
+                    <td>{{ debug_info.name }}</td>
+                    <td>{{ debug_info.name.__class__.__name__ }}</td>
+                </tr>
+                <tr class="table-warning">
+                    <td>入团时间</td>
+                    <td>{{ debug_info.league_join_date }}</td>
+                    <td>{{ debug_info.league_join_date_type }}</td>
+                </tr>
+                <tr class="table-warning">
+                    <td>递交入党申请书时间</td>
+                    <td>{{ debug_info.application_date }}</td>
+                    <td>{{ debug_info.application_date_type }}</td>
+                </tr>
+                <tr>
+                    <td>是否递交入党申请书</td>
+                    <td>{{ debug_info.has_application }}</td>
+                    <td>{{ debug_info.has_application.__class__.__name__ }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4>完整数据字典</h4>
+        </div>
+        <div class="card-body">
+            <pre class="bg-light p-3 rounded">{{ student_dict }}</pre>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4>行式数据</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>字段</th>
+                    <th>值</th>
+                </tr>
+                {% for key, value in student_dict.items() %}
+                <tr {% if 'date' in key %}class="table-warning"{% endif %}>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <a href="{{ url_for('student.index') }}" class="btn btn-primary mb-4">返回个人信息</a>
+</div>
+{% endblock %} 

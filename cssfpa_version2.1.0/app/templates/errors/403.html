@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}权限不足{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">权限不足</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-5x text-primary"></i>
+                    </div>
+                    <h3>403 - 禁止访问</h3>
+                    <p class="lead">您没有权限访问此页面。</p>
+                    <div class="mt-4">
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.role == 'student' %}
+                                <a href="{{ url_for('student.index') }}" class="btn btn-primary">返回学生首页</a>
+                            {% elif current_user.role == 'teacher' %}
+                                <a href="{{ url_for('teacher.index') }}" class="btn btn-primary">返回教师首页</a>
+                            {% elif current_user.role == 'admin' %}
+                                <a href="{{ url_for('admin.index') }}" class="btn btn-primary">返回管理员首页</a>
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">返回登录页面</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">返回登录页面</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

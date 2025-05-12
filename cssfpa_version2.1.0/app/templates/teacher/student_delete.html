@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}确认删除学生 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">确认删除学生</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 警告：此操作将永久删除该学生的所有信息和账号，无法恢复！
+                    </div>
+                    
+                    <h6 class="font-weight-bold">学生信息：</h6>
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th width="30%">学号</th>
+                            <td>{{ student.student_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>姓名</th>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>班级</th>
+                            <td>{{ student.class_name or '未设置' }}</td>
+                        </tr>
+                        <tr>
+                            <th>专业</th>
+                            <td>{{ student.major or '未设置' }}</td>
+                        </tr>
+                    </table>
+                    
+                    <form method="POST" action="{{ url_for('teacher.delete_student', student_id=student.student_id) }}">
+                        {{ form.hidden_tag() }}
+                        <div class="d-flex justify-content-center mt-4">
+                            <a href="{{ url_for('teacher.index') }}" class="btn btn-secondary mr-3">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 确认删除
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

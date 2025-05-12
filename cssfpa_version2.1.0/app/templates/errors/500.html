@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}服务器错误{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">服务器错误</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                    </div>
+                    <h3>500 - 内部服务器错误</h3>
+                    <p class="lead">服务器遇到了一个错误，无法完成您的请求。</p>
+                    <p>管理员已收到此错误的通知，我们会尽快修复。</p>
+                    <div class="mt-4">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">返回登录页面</a>
+                        <button class="btn btn-secondary ms-2" onclick="window.location.reload()">重新加载页面</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

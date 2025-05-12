@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block title %}编辑个人信息 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <nav class="col-md-2 d-none d-md-block glass-sidebar sidebar">
+            <div class="sidebar-inner">
+                <div class="text-center mb-4">
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-3">
+                        <span>{{ student.name[0] }}</span>
+                    </div>
+                    <h5 class="text-white mb-0">{{ student.name }}</h5>
+                    <small class="text-white-50">{{ student.student_id }}</small>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student.index') }}">
+                            <i class="fas fa-user me-2"></i>个人信息
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student.my_files') }}">
+                            <i class="fas fa-file me-2"></i>文件管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student.change_password') }}">
+                            <i class="fas fa-key me-2"></i>修改密码
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>退出登录
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="col-md-10 ms-sm-auto px-md-4 main-content">
+            <!-- 顶部区域 -->
+            <div class="top-area">
+                <!-- 移动端菜单切换按钮 -->
+                <button id="sidebarToggle" class="btn btn-sm d-md-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center border-bottom mb-4">
+                    <h1 class="h2">编辑个人信息</h1>
+                </div>
+            </div>
+
+            <!-- 主要表单内容 -->
+            <div class="content-area">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.csrf_token }}
+                    {{ form.student_id(type="hidden") }}
+                    
+                    <!-- 个人基本信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">个人基本信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">学号</label>
+                                    <input type="text" class="form-control" value="{{ form.student_id.data }}" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.id_card.label(class="form-label") }}
+                                    {{ form.id_card(class="form-control") }}
+                                    {% if form.id_card.errors %}
+                                        {% for error in form.id_card.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        {% for error in form.name.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.gender.label(class="form-label") }}
+                                    {{ form.gender(class="form-select") }}
+                                    {% if form.gender.errors %}
+                                        {% for error in form.gender.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.ethnicity.label(class="form-label") }}
+                                    {{ form.ethnicity(class="form-control") }}
+                                    {% if form.ethnicity.errors %}
+                                        {% for error in form.ethnicity.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.hometown.label(class="form-label") }}
+                                    {{ form.hometown(class="form-control") }}
+                                    {% if form.hometown.errors %}
+                                        {% for error in form.hometown.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.birth_date.label(class="form-label") }}
+                                    {{ form.birth_date(class="form-control", type="date", value=student.birth_date.strftime('%Y-%m-%d') if student.birth_date else '') }}
+                                    {% if form.birth_date.errors %}
+                                        {% for error in form.birth_date.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.phone.label(class="form-label") }}
+                                    {{ form.phone(class="form-control") }}
+                                    {% if form.phone.errors %}
+                                        {% for error in form.phone.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学籍信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">学籍信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.department.label(class="form-label") }}
+                                    {{ form.department(class="form-control") }}
+                                    {% if form.department.errors %}
+                                        {% for error in form.department.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.major.label(class="form-label") }}
+                                    {{ form.major(class="form-control") }}
+                                    {% if form.major.errors %}
+                                        {% for error in form.major.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.class_name.label(class="form-label") }}
+                                    {{ form.class_name(class="form-control") }}
+                                    {% if form.class_name.errors %}
+                                        {% for error in form.class_name.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.enrollment_date.label(class="form-label") }}
+                                    {{ form.enrollment_date(class="form-control", type="date", value=student.enrollment_date.strftime('%Y-%m-%d') if student.enrollment_date else '') }}
+                                    {% if form.enrollment_date.errors %}
+                                        {% for error in form.enrollment_date.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 政治信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">政治信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    {{ form.political_status.label(class="form-label") }}
+                                    {{ form.political_status(class="form-select") }}
+                                    {% if form.political_status.errors %}
+                                        {% for error in form.political_status.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.league_member_id.label(class="form-label") }}
+                                    {{ form.league_member_id(class="form-control") }}
+                                    {% if form.league_member_id.errors %}
+                                        {% for error in form.league_member_id.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.league_branch.label(class="form-label") }}
+                                    {{ form.league_branch(class="form-control") }}
+                                    {% if form.league_branch.errors %}
+                                        {% for error in form.league_branch.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.league_join_date.label(class="form-label") }}
+                                    {{ form.league_join_date(class="form-control", type="date", value=student.league_join_date.strftime('%Y-%m-%d') if student.league_join_date else '') }}
+                                    {% if form.league_join_date.errors %}
+                                        {% for error in form.league_join_date.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <small class="form-text text-muted">格式：YYYY-MM-DD</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.has_application(class="form-check-input") }}
+                                        {{ form.has_application.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.application_date.label(class="form-label") }}
+                                    {{ form.application_date(class="form-control", type="date", value=student.application_date.strftime('%Y-%m-%d') if student.application_date and student.has_application else '') }}
+                                    {% if form.application_date.errors %}
+                                        {% for error in form.application_date.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <small class="form-text text-muted">{% if not student.has_application %}无{% else %}格式：YYYY-MM-DD{% endif %}</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.passed_exam(class="form-check-input") }}
+                                        {{ form.passed_exam.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.class_approved(class="form-check-input") }}
+                                        {{ form.class_approved.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学业信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">学业信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.has_failed_course(class="form-check-input") }}
+                                        {{ form.has_failed_course.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.comprehensive_score.label(class="form-label") }}
+                                    {{ form.comprehensive_score(class="form-control", type="number", min="0", max="100") }}
+                                    {% if form.comprehensive_score.errors %}
+                                        {% for error in form.comprehensive_score.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.english_level.label(class="form-label") }}
+                                    {{ form.english_level(class="form-control") }}
+                                    {% if form.english_level.errors %}
+                                        {% for error in form.english_level.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.scholarship.label(class="form-label") }}
+                                    {{ form.scholarship(class="form-control", rows="3") }}
+                                    {% if form.scholarship.errors %}
+                                        {% for error in form.scholarship.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.volunteer_hours.label(class="form-label") }}
+                                    {{ form.volunteer_hours(class="form-control", type="number", min="0", max="100") }}
+                                    <small class="form-text text-muted">上限100小时</small>
+                                    {% if form.volunteer_hours.errors %}
+                                        {% for error in form.volunteer_hours.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 成就经历信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">成就经历信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.awards.label(class="form-label") }}
+                                    {{ form.awards(class="form-control", rows="5") }}
+                                    {% if form.awards.errors %}
+                                        {% for error in form.awards.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.social_practice.label(class="form-label") }}
+                                    {{ form.social_practice(class="form-control", rows="5") }}
+                                    {% if form.social_practice.errors %}
+                                        {% for error in form.social_practice.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                        <a href="{{ url_for('student.index') }}" class="btn btn-secondary me-md-2">取消</a>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    :root {
+        --party-red: #c5221f;
+        --sidebar-width: 250px;
+        --font-main: "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+        --top-height: 60px;
+    }
+    
+    body {
+        font-family: var(--font-main);
+        background-color: #f8f9fa;
+        padding-top: var(--top-height);
+        overflow-x: hidden;
+    }
+    
+    /* 侧边栏样式 */
+    .glass-sidebar {
+        background-color: rgba(197, 34, 31, 0.85);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        top: var(--top-height);
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        z-index: 100;
+        padding: 0;
+        overflow-y: auto;
+    }
+    
+    .sidebar-inner {
+        padding: 20px 0;
+    }
+    
+    .avatar-placeholder {
+        width: 60px;
+        height: 60px;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+    }
+    
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.85);
+        padding: 10px 20px;
+        margin: 5px 0;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    /* 主内容区域 */
+    .main-content {
+        padding-top: 20px;
+        margin-left: var(--sidebar-width);
+    }
+    
+    .top-area {
+        margin-bottom: 20px;
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 767.98px) {
+        .glass-sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .glass-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        #sidebarToggle {
+            display: block;
+            background-color: var(--party-red);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+    }
+    
+    /* 表单样式 */
+    .card-header {
+        font-weight: 500;
+    }
+    
+    .info-group {
+        margin-bottom: 1rem;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--party-red);
+        box-shadow: 0 0 0 0.25rem rgba(197, 34, 31, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: var(--party-red);
+        border-color: var(--party-red);
+    }
+    
+    .btn-primary:hover,
+    .btn-primary:focus {
+        background-color: #a61c19;
+        border-color: #a61c19;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 移动端侧边栏切换
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.glass-sidebar');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击主内容区域时关闭侧边栏
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.addEventListener('click', function(e) {
+                    if (window.innerWidth < 768 && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %} 

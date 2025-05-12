@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}数据库调试 - 入党积极分子综合评分系统{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">数据库调试</h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4>用户数据</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>用户ID</th>
+                    <td>{{ user_data.id }}</td>
+                </tr>
+                <tr>
+                    <th>用户名/学号</th>
+                    <td>{{ user_data.username }}</td>
+                </tr>
+                <tr>
+                    <th>角色</th>
+                    <td>{{ user_data.role }}</td>
+                </tr>
+                <tr>
+                    <th>关联学生ID</th>
+                    <td>{{ user_data.student_id }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4>数据库直接查询结果</h4>
+        </div>
+        <div class="card-body">
+            {% if 'error' in db_data %}
+                <div class="alert alert-danger">{{ db_data.error }}</div>
+            {% else %}
+                <table class="table table-bordered">
+                    <tr>
+                        <th>学生ID</th>
+                        <td>{{ db_data.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>学号</th>
+                        <td>{{ db_data.student_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>姓名</th>
+                        <td>{{ db_data.name }}</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <th>入团时间 (数据库值)</th>
+                        <td>{{ db_data.league_join_date }}</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <th>递交入党申请书时间 (数据库值)</th>
+                        <td>{{ db_data.application_date }}</td>
+                    </tr>
+                    <tr>
+                        <th>是否递交入党申请书</th>
+                        <td>{{ db_data.has_application }}</td>
+                    </tr>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4>ORM 查询结果</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>学生ID</th>
+                    <td>{{ orm_data.id }}</td>
+                </tr>
+                <tr>
+                    <th>学号</th>
+                    <td>{{ orm_data.student_id }}</td>
+                </tr>
+                <tr>
+                    <th>姓名</th>
+                    <td>{{ orm_data.name }}</td>
+                </tr>
+                <tr class="table-warning">
+                    <th>入团时间 (ORM)</th>
+                    <td>{{ orm_data.league_join_date }}</td>
+                </tr>
+                <tr class="table-warning">
+                    <th>递交入党申请书时间 (ORM)</th>
+                    <td>{{ orm_data.application_date }}</td>
+                </tr>
+                <tr>
+                    <th>是否递交入党申请书</th>
+                    <td>{{ orm_data.has_application }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex">
+        <a href="{{ url_for('student.index') }}" class="btn btn-primary mr-2">返回个人信息</a>
+        <a href="{{ url_for('student.debug') }}" class="btn btn-secondary mx-2">查看对象调试</a>
+    </div>
+</div>
+{% endblock %} 

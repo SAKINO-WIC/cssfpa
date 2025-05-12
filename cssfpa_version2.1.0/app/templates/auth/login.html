@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('登录') }} - {{ _('入党积极分子综合评分系统') }}{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        <div class="row g-0">
+            <!-- 左侧图片区域 -->
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="login-image">
+                    <div class="image-overlay"></div>
+                    <div class="image-content">
+                        <!-- 内容已移除，只保留背景图片 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧登录表单区域 -->
+            <div class="col-lg-6">
+                <div class="login-form-container">
+                    <div class="login-header">
+                        <h2>{{ _('用户登录') }}</h2>
+                        <p>{{ _('欢迎使用入党积极分子综合评分系统') }}</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('auth.login') }}" class="login-form" autocomplete="off">
+                        {{ form.csrf_token }}
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else ""), placeholder=_("角色"), id="role") }}
+                            <label for="role">{{ _('角色') }}</label>
+                            {% if form.role.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder=_("请输入用户名"), id="username", autocomplete="off") }}
+                            <label for="username" id="username-label">{{ _('用户名') }}</label>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder=_("请输入密码"), id="password", autocomplete="new-password") }}
+                            <label for="password" id="password-label">{{ _('密码') }}</label>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            {{ form.remember_me(class="form-check-input", id="remember_me") }}
+                            <label class="form-check-label" for="remember_me">
+                                {{ _('记住我') }}
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>{{ _('登录') }}
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="login-footer">
+                        <div class="forgot-password">
+                            <a href="{{ url_for('auth.reset_password_request') }}">{{ _('忘记密码？') }}</a>
+                        </div>
+                        <div class="system-info">
+                            <p>{{ _('版本') }} 2.1.0 | &copy; {{ now.year }} {{ _('入党积极分子综合评分系统') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        height: 100vh;
+        overflow: hidden;
+        /* background-image: url("{{ url_for('static', filename='image/bg2.jpg') }}"); */
+        background-image: url("{{ url_for('static', filename='image/bg3.jpg') }}");
+
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    
+    .login-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+    
+    .login-container {
+        width: 90%;
+        max-width: 1000px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        border-radius: 16px;
+        overflow: hidden;
+        background-color: rgba(255, 255, 255, 0.90);  /* 添加透明度效果 */
+        position: relative;
+        top: -7%;  /* 向上移动到屏幕中间偏上位置 */
+        transform: translateY(-5px);
+        animation: float 2.8s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translateY(-5px);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+        100% {
+            transform: translateY(-5px);
+        }
+    }
+    
+    /* 左侧图片样式 */
+    .login-image {
+        background-size: cover;
+        background-position: center;
+        height: 100%;
+        position: relative;
+        min-height: 600px;
+        transition: background-image 1s ease-in-out;
+    }
+    
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(145deg, rgba(var(--party-red-rgb), 0.7), rgba(var(--party-red-rgb), 0.5));
+    }
+    
+    .image-content {
+        position: relative;
+        z-index: 1;
+        color: white;
+        height: 100%;
+    }
+    
+    /* 登录表单样式 */
+    .login-form-container {
+        padding: 40px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 600px;
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .login-header h2 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .login-header p {
+        color: #6c757d;
+    }
+    
+    .login-form {
+        margin-bottom: 20px;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+    }
+    
+    .form-control:focus {
+        border-color: var(--party-red);
+        box-shadow: 0 0 0 0.25rem rgba(var(--party-red-rgb), 0.25);
+    }
+    
+    .btn-primary {
+        background-color: var(--party-red);
+        border-color: var(--party-red);
+        padding: 12px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: rgba(var(--party-red-rgb), 0.9);
+        border-color: rgba(var(--party-red-rgb), 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(var(--party-red-rgb), 0.2);
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--party-red);
+        border-color: var(--party-red);
+    }
+    
+    .login-footer {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .forgot-password a {
+        color: var(--party-red);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .forgot-password a:hover {
+        text-decoration: underline;
+    }
+    
+    .system-info {
+        color: #adb5bd;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 991.98px) {
+        body {
+            overflow: auto;
+        }
+        
+        .login-page {
+            height: auto;
+            padding: 40px 0;
+        }
+        
+        .login-container {
+            width: 90%;
+            max-width: 500px;
+            top: 0;  /* 在移动设备上不需要向上移动 */
+        }
+        
+        .login-form-container {
+            min-height: auto;
+            padding: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 根据角色选择更新提示文本
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('role');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const usernameLabel = document.getElementById('username-label');
+        const passwordLabel = document.getElementById('password-label');
+        const currentLang = document.documentElement.lang || 'zh';
+        
+        // 初始清空任何可能的自动填充
+        setTimeout(function() {
+            usernameInput.value = '';
+            passwordInput.value = '';
+        }, 100);
+        
+        // 翻译字典
+        const translations = {
+            'zh': {
+                'student_username': '请输入学号',
+                'student_password': '请输入密码 (初始为身份证后6位)',
+                'teacher_username': '请输入教师工号',
+                'teacher_password': '请输入密码',
+                'admin_username': '请输入管理员账号',
+                'admin_password': '请输入管理员密码',
+                'default_username': '请先选择角色',
+                'default_password': '请先选择角色'
+            },
+            'en': {
+                'student_username': 'Enter Student ID',
+                'student_password': 'Enter Password (Default: Last 6 digits of ID)',
+                'teacher_username': 'Enter Teacher ID',
+                'teacher_password': 'Enter Password',
+                'admin_username': 'Enter Admin Account',
+                'admin_password': 'Enter Admin Password',
+                'default_username': 'Select Role First',
+                'default_password': 'Select Role First'
+            }
+        };
+        
+        // 角色变化时更新提示
+        roleSelect.addEventListener('change', function() {
+            const selectedRole = roleSelect.value;
+            const lang = currentLang in translations ? currentLang : 'zh';
+            
+            if (selectedRole === 'student') {
+                usernameInput.placeholder = translations[lang]['student_username'];
+                passwordInput.placeholder = translations[lang]['student_password'];
+            } else if (selectedRole === 'teacher') {
+                usernameInput.placeholder = translations[lang]['teacher_username'];
+                passwordInput.placeholder = translations[lang]['teacher_password'];
+            } else if (selectedRole === 'admin') {
+                usernameInput.placeholder = translations[lang]['admin_username'];
+                passwordInput.placeholder = translations[lang]['admin_password'];
+            } else {
+                usernameInput.placeholder = translations[lang]['default_username'];
+                passwordInput.placeholder = translations[lang]['default_password'];
+            }
+        });
+        
+        // 初始触发一次，设置初始提示
+        roleSelect.dispatchEvent(new Event('change'));
+        
+        // 背景图片轮播
+        const loginImage = document.querySelector('.login-image');
+        const bgImages = [
+            "{{ url_for('static', filename='image/TJNUP1.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP2.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP3.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP4.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP5.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP6.jpg') }}",
+            "{{ url_for('static', filename='image/TJNUP7.jpg') }}"
+        ];
+        let currentBgIndex = 0;
+        
+        // 预加载所有图片
+        const preloadImages = bgImages.map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+        
+        // 设置初始背景
+        loginImage.style.backgroundImage = `url(${bgImages[0]})`;
+        loginImage.style.backgroundPosition = 'center';
+        loginImage.style.backgroundSize = 'cover';
+        
+        // 每6秒切换一次背景
+        function changeBackground() {
+            // 添加淡出效果
+            loginImage.style.opacity = '0.8';
+            
+            setTimeout(() => {
+                // 切换到下一张图片
+                currentBgIndex = (currentBgIndex + 1) % bgImages.length;
+                loginImage.style.backgroundImage = `url(${bgImages[currentBgIndex]})`;
+                
+                // 根据图片调整位置，确保关键部分显示
+                switch(currentBgIndex) {
+                    case 0: // TJNU_P1
+                        loginImage.style.backgroundPosition = 'center';
+                        break;
+                    case 1: // TJNU_P2
+                        loginImage.style.backgroundPosition = 'center top';
+                        break;
+                    case 2: // TJNU_P3
+                        loginImage.style.backgroundPosition = 'center center';
+                        break;
+                    case 3: // TJNU_P4
+                        loginImage.style.backgroundPosition = 'center';
+                        break;
+                    case 4: // TJNU_P5
+                        loginImage.style.backgroundPosition = 'center';
+                        break;
+                    case 5: // TJNU_P6
+                        loginImage.style.backgroundPosition = 'center top';
+                        break;
+                    case 6: // TJNU_P7
+                        loginImage.style.backgroundPosition = 'center';
+                        break;
+                    default:
+                        loginImage.style.backgroundPosition = 'center';
+                }
+                
+                // 添加淡入效果
+                setTimeout(() => {
+                    loginImage.style.opacity = '1';
+                }, 300);
+                
+            }, 500);
+        }
+        
+        // 启动轮播
+        setInterval(changeBackground, 6000);
+    });
+</script>
+{% endblock %}
